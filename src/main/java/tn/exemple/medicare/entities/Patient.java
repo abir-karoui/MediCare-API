@@ -6,24 +6,20 @@ import java.io.Serializable;
 import java.util.Set;
 
 
-@AllArgsConstructor
-@NoArgsConstructor
+
 @Entity
 @DiscriminatorValue("Patient")
 public class Patient extends User {
     String age ;
-
     public String getAge() {
         return age;
     }
-
     public void setAge(String age) {
         this.age = age;
     }
-
-    /*public Patient(){
+    public Patient(){
             this.setRole(TypeRole.PATIENT);
-        }*/
+        }
     @ManyToMany
     @JoinTable(
             name = "patient_doctor",

@@ -7,25 +7,31 @@ import java.io.Serializable;
 import java.util.Set;
 
 
+
 @AllArgsConstructor
-@NoArgsConstructor
 @Entity
 @DiscriminatorValue("Doctor")
-public class Doctor extends User {
-    String specialite ;
 
-    public String getSpecialite() {
-        return specialite;
+public class Doctor extends User {
+    String spatiality ;
+
+
+    public String getSpatiality() {
+        return spatiality;
     }
 
-    public void setSpecialite(String specialite) {
-        this.specialite = specialite;
+    public void setSpatiality(String spatiality) {
+        this.spatiality = spatiality;
+    }
+
+    public  Doctor (){
+        this.setRole(TypeRole.DOCTOR);
     }
 
     @ManyToMany(mappedBy = "doctors")
     Set<Patient> patients;
-    /*public  Doctor (){
-        this.setRole(TypeRole.DOCTOR);
-    }*/
+
 
 }
+
+

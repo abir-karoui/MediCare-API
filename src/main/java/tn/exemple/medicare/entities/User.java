@@ -1,4 +1,6 @@
 package tn.exemple.medicare.entities;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -6,12 +8,16 @@ import lombok.experimental.FieldDefaults;
 import java.io.Serializable;
 
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Entity(name="user")
+
+@Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name="usertab", discriminatorType = DiscriminatorType.STRING)
-public class User implements Serializable {
+@DiscriminatorColumn(name="RoleTab", discriminatorType = DiscriminatorType.STRING)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "role")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = Doctor.class, name = "DOCTOR"),
+        @JsonSubTypes.Type(value = Patient.class, name = "PATIENT")
+})
+public  class User implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     long id;
@@ -26,6 +32,7 @@ public class User implements Serializable {
     TypeRole role;
     @Enumerated(EnumType.STRING)
     TypeGender gender ;
+
 
     public long getId() {
         return id;
@@ -106,10 +113,6 @@ public class User implements Serializable {
     public void setGender(TypeGender gender) {
         this.gender = gender;
     }
-
-
-
-
 
 
 }
