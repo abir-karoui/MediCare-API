@@ -1,4 +1,4 @@
-package tn.exemple.medicare.entities;
+package tn.exemple.medicare.enums;
 
 public enum TypeRole {
     DOCTOR , PATIENT

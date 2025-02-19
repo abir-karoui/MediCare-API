@@ -2,16 +2,22 @@ package tn.exemple.medicare.entities;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.persistence.*;
-import lombok.*;
-import lombok.experimental.FieldDefaults;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import tn.exemple.medicare.enums.TypeGender;
+import tn.exemple.medicare.enums.TypeRole;
 
 import java.io.Serializable;
 
 
 
 @Entity
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name="RoleTab", discriminatorType = DiscriminatorType.STRING)
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+@Inheritance(strategy = InheritanceType.JOINED)
+@Table(name = "users")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "role")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = Doctor.class, name = "DOCTOR"),
@@ -24,7 +30,7 @@ public  class User implements Serializable {
     String firstname;
     String lastname;
     String email;
-    String mdp;
+    String password;
     String phone;
     String address;
     String photo;
@@ -66,12 +72,12 @@ public  class User implements Serializable {
         this.email = email;
     }
 
-    public String getMdp() {
-        return mdp;
+    public String getPassword() {
+        return password;
     }
 
-    public void setMdp(String mdp) {
-        this.mdp = mdp;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getPhone() {
@@ -109,7 +115,6 @@ public  class User implements Serializable {
     public TypeGender getGender() {
         return gender;
     }
-
     public void setGender(TypeGender gender) {
         this.gender = gender;
     }

@@ -1,14 +1,18 @@
 package tn.exemple.medicare.entities;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import tn.exemple.medicare.enums.TypeRole;
 
-import java.io.Serializable;
 import java.util.Set;
 
 
 
 @Entity
-@DiscriminatorValue("Patient")
+@AllArgsConstructor
+@Data
+@Table(name = "Patient")
 public class Patient extends User {
     String age ;
     public String getAge() {

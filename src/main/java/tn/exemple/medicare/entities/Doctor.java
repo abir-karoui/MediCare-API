@@ -2,26 +2,28 @@ package tn.exemple.medicare.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import tn.exemple.medicare.enums.TypeRole;
 
-import java.io.Serializable;
 import java.util.Set;
 
 
 
-@AllArgsConstructor
+
 @Entity
-@DiscriminatorValue("Doctor")
+@Data
+@Table(name = "Doctor")
+@AllArgsConstructor
 
 public class Doctor extends User {
-    String spatiality ;
+    String specialtiy ;
 
 
-    public String getSpatiality() {
-        return spatiality;
+    public String getSpecialtiy() {
+        return specialtiy;
     }
 
-    public void setSpatiality(String spatiality) {
-        this.spatiality = spatiality;
+    public void setSpecialtiy(String specialtiy) {
+        this.specialtiy = specialtiy;
     }
 
     public  Doctor (){

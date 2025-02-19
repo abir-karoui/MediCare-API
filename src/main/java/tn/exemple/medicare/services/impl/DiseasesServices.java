@@ -1,10 +1,11 @@
-package tn.exemple.medicare.services;
+package tn.exemple.medicare.services.impl;
 
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tn.exemple.medicare.entities.Diseases;
 import tn.exemple.medicare.repositories.IDiseasesRepository;
+import tn.exemple.medicare.services.IDiseases;
 
 @AllArgsConstructor
 @Service
