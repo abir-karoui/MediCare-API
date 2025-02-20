@@ -1,10 +1,7 @@
 package tn.exemple.medicare.entities;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
 import java.util.Set;
@@ -13,6 +10,8 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@Data
+@Table(name = "Diseases")
 public class Diseases implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

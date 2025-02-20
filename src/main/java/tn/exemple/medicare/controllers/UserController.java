@@ -1,5 +1,6 @@
 package tn.exemple.medicare.controllers;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -7,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.exemple.medicare.entities.User;
 import tn.exemple.medicare.enums.TypeRole;
+import tn.exemple.medicare.exceptions.UserException;
 import tn.exemple.medicare.services.IUserSevices;
 
 import java.util.List;
@@ -29,7 +31,7 @@ public class UserController {
         return iUserSevices.retrieveAllUsers();
     }
     @GetMapping("{id}")
-    public Optional<User> getUserById(@PathVariable("id") Long id){
+    public User getUserById(@PathVariable("id") Long id) throws Exception{
         return  iUserSevices.getUserById(id);
     }
 
@@ -50,10 +52,10 @@ public class UserController {
             iUserSevices.deleteUserById(id);
             return new ResponseEntity<>("User deleted successfully", HttpStatus.OK);
 
-        }   catch (RuntimeException e) {
-        return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }   catch (EntityNotFoundException e) {
+        return new ResponseEntity<>( e.getMessage(), HttpStatus.NOT_FOUND);
     }
-    }
+       }
     @DeleteMapping("/")
     public void deleteAllUser(){ iUserSevices.deleteAllUser();}
 }

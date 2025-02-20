@@ -7,10 +7,11 @@ import java.util.Optional;
 public interface IUserSevices {
     User addUser(User user);
     List<User> retrieveAllUsers();
-    Optional<User> getUserById(Long id);
+    //User getUserById(Long id) throws Exception ;
+   User getUserById(Long id) throws Exception ;
     List<User> getUsersByRole(TypeRole role);
     User UpdateUser(Long id , User user) ;
-    void deleteUserById(Long id);
+    void  deleteUserById(Long id);
     void deleteAllUser();
 
 }
