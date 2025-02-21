@@ -21,4 +21,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(new ErrorBody(illegalArgumentException.getMessage()), HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler
+    public ResponseEntity handleNullPointerException(final NullPointerException nullPointerException) {
+        return new ResponseEntity<>(new ErrorBody(nullPointerException.getMessage()), HttpStatus.BAD_REQUEST);
+    }
+
 }
