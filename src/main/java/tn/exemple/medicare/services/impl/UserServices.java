@@ -1,5 +1,10 @@
 package tn.exemple.medicare.services.impl;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import tn.exemple.medicare.entities.Doctor;
 import tn.exemple.medicare.entities.Patient;
@@ -13,21 +18,32 @@ import java.util.Optional;
 @Service
 public class UserServices implements IUserSevices {
     private final IUserRepository iUserRepository;
-    public UserServices(IUserRepository iUserRepository) {
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+
+    public UserServices(IUserRepository iUserRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
         this.iUserRepository = iUserRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
     }
+
     @Override
     public User addUser(User user) {
+        if (iUserRepository.findByEmail(user.getEmail()) != null){
+             throw new EntityNotFoundException("Email already existe");
+        }
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
        if (user.getRole() == TypeRole.DOCTOR) {
             Doctor doctor = (Doctor) user;
             return iUserRepository.save(doctor);
-        } else if (user.getRole() == TypeRole.PATIENT) {
+       } else if (user.getRole() == TypeRole.PATIENT) {
             Patient patient = (Patient) user;
-
                 return iUserRepository.save(patient);
-        }
+       }
         return null;
     }
+
     @Override
     public List<User> retrieveAllUsers() {
         return iUserRepository.findAll();

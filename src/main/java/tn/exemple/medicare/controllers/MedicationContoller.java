@@ -58,7 +58,6 @@ public class MedicationContoller {
             iMedicationServices.deleteMedicationsById(id);
             return new ResponseEntity<>("Medication with id : " +id+ " deleted successfully", HttpStatus.OK);
     }
-
     @GetMapping("/pagination")
     public ResponseEntity<Page<Medication>> getMedications(
             @RequestParam(defaultValue = "0" ) int pageNo,

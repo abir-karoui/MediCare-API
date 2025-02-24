@@ -21,9 +21,10 @@ public class UserController {
     @Autowired
     private IUserSevices iUserSevices;
 
+
     @PostMapping("/adduser")
-    User addUser(@RequestBody User u) {
-        return iUserSevices.addUser(u);
+    public ResponseEntity<?> addUser(@RequestBody User u) {
+         return ResponseEntity.ok( iUserSevices.addUser(u));
     }
 
     @GetMapping("/all")
