@@ -3,6 +3,7 @@ package tn.exemple.medicare.controllers;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -56,5 +57,13 @@ public class MedicationContoller {
     public ResponseEntity<Object> deleteMedicationsById(@PathVariable Long id) {
             iMedicationServices.deleteMedicationsById(id);
             return new ResponseEntity<>("Medication with id : " +id+ " deleted successfully", HttpStatus.OK);
+    }
+
+    @GetMapping("/pagination")
+    public ResponseEntity<Page<Medication>> getMedications(
+            @RequestParam(defaultValue = "0" ) int pageNo,
+            @RequestParam(defaultValue = "5" ) int pageSize) {
+        Page<Medication> medications = iMedicationServices.getMedications(pageNo, pageSize);
+        return ResponseEntity.ok(medications);
     }
 }

@@ -2,6 +2,9 @@ package tn.exemple.medicare.services.impl;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import tn.exemple.medicare.entities.Medication;
 import tn.exemple.medicare.repositories.IMedicationRepository;
@@ -73,8 +76,10 @@ public class MedicationServices implements IMedicationServices {
         iMedicationRepository.deleteAll();
     }
 
-
-
+    @Override
+    public Page<Medication> getMedications(int pageNo, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNo, pageSize); return iMedicationRepository.findAll(pageable);
+    }
 
 
 }
