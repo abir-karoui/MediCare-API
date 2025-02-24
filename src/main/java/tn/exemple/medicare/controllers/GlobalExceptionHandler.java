@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import tn.exemple.medicare.exceptions.UserException;
 
 @ControllerAdvice
@@ -25,5 +26,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity handleNullPointerException(final NullPointerException nullPointerException) {
         return new ResponseEntity<>(new ErrorBody(nullPointerException.getMessage()), HttpStatus.BAD_REQUEST);
     }
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<String> handleNoResourceFoundException(NoResourceFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Resource not found: " + ex.getMessage());
+    }
+
 
 }

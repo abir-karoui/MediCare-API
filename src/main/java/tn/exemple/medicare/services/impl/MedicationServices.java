@@ -30,6 +30,11 @@ public class MedicationServices implements IMedicationServices {
     }
     @Override
     public List<Medication> getMedicationsByDenomination(String denomination) {
+
+        List<Medication> medications = iMedicationRepository.findAllByDenomination(denomination);
+        if (medications.isEmpty()) {
+            throw new EntityNotFoundException("No medication found with denomination: " + denomination);
+        }
         return iMedicationRepository.findAllByDenomination(denomination);
     }
     @Override
@@ -45,7 +50,6 @@ public class MedicationServices implements IMedicationServices {
 
     @Override
     public void deleteMedicationsById(Long id) {
-
         if (!iMedicationRepository.existsById(id)) {
             throw new EntityNotFoundException("Medication with Id: '" +id + " ' not found");
         }
@@ -55,6 +59,12 @@ public class MedicationServices implements IMedicationServices {
     @Override
     @Transactional
     public  List<Medication> deleteMedicationsByDenomination(String denomination) {
+        List<Medication> medications = iMedicationRepository.findAllByDenomination(denomination);
+
+        if (medications.isEmpty()) {
+            throw new EntityNotFoundException("No medications found with denomination: " + denomination);
+        }
+
        return iMedicationRepository.deleteMedicationsByDenomination(denomination);
     }
 
