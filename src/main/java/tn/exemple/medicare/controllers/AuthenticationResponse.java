@@ -9,7 +9,7 @@ import lombok.Data;
 @Data
 public class AuthenticationResponse {
     private String token;
-    public AuthenticationResponse(String token) {
+   public AuthenticationResponse(String token) {
         this.token = token;
     }
     public String getToken() {
@@ -18,12 +18,12 @@ public class AuthenticationResponse {
     public void setToken(String token) {
         this.token = token;
     }
-/* private String accessToken;
+    /*private String accessToken;
     private String refreshToken;
-
-    public AuthenticationResponse(String token) {
-        this.token = token;
+    public AuthenticationResponse(String accessToken) {
+        this.accessToken = accessToken;
     }
+
 
     public String getAccessToken() {
         return accessToken;

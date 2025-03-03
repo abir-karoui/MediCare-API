@@ -1,5 +1,6 @@
 package tn.exemple.medicare.controllers;
 
+import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import tn.exemple.medicare.enums.TypeRole;
 import tn.exemple.medicare.exceptions.UserException;
 import tn.exemple.medicare.services.IUserSevices;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,24 +35,26 @@ public class UserController {
     @Autowired
     private UserDetailsServices userDetailsServices;
 
-    @PostMapping("/adduser")
+   /* @PostMapping("/adduser")
     public ResponseEntity<?> addUser(@RequestBody User u) {
          return ResponseEntity.ok( iUserSevices.addUser(u));
-    }
-   /* @PostMapping("/register")
+    }*/
+    @PostMapping("/adduser")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public ResponseEntity<?> addUser(@RequestBody @Valid User u) {
-       // return ResponseEntity.ok( iUserSevices.addUser(u));
+    public ResponseEntity<?> addUser(@RequestBody @Valid User u) throws MessagingException {
         iUserSevices.addUser(u);
         return  ResponseEntity.accepted().build();
 
     }
-*/
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponse> login(@RequestBody @Valid
-                                                            AuthenticationRequest request) {
+    public ResponseEntity<AuthenticationResponse> login(@RequestBody @Valid AuthenticationRequest request) {
         return ResponseEntity.ok( iUserSevices.login(request));
     }
+    @PatchMapping("/changePassword")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request , Principal connectedUser) {
+        iUserSevices.changePassword(request , connectedUser);
+        return  ResponseEntity.accepted().build();
+         }
 
     @GetMapping("/all")
     public  ResponseEntity<List<User>> retrieveAllUsers() {

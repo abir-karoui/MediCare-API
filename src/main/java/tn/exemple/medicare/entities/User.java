@@ -55,12 +55,22 @@ public  class User implements Serializable , UserDetails , Principal {
     @Enumerated(EnumType.STRING)
     private TypeGender gender ;
 
-    /*@JsonIgnore
+    @JsonIgnore
     private boolean accountLocked;
     @JsonIgnore
     private boolean enabled ;
-
     public boolean isAccountLocked() {
+        return false;
+    }
+    public void setAccountLocked(boolean accountLocked) {
+        this.accountLocked = accountLocked;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    /*public boolean isAccountLocked() {
         return accountLocked;
     }
 
@@ -70,8 +80,8 @@ public  class User implements Serializable , UserDetails , Principal {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
-    }*/
-
+    }
+*/
     public LocalDateTime getCreateDate() {
         return createDate;
     }

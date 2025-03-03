@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+//@Builder
 public class Token {
     @Id
     @GeneratedValue
