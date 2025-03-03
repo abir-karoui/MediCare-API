@@ -13,9 +13,6 @@ import tn.exemple.medicare.services.IDoctor;
 @RequiredArgsConstructor
 public class DoctorController {
     private IDoctor iDoctor;
-    /*@PostMapping("/adduser")
-    Doctor addDoctor(@RequestBody Doctor d ) {
-        return iDoctor.addDoctor(d) ;
-    }*/
+
 
 }

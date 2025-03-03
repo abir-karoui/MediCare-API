@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import tn.exemple.medicare.enums.TypeRole;
 
+import java.time.LocalDate;
 import java.util.Set;
 
 
@@ -14,13 +15,16 @@ import java.util.Set;
 @Data
 @Table(name = "Patient")
 public class Patient extends User {
-    String age ;
-    public String getAge() {
-        return age;
+     private LocalDate dateOfBirth ;
+
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
     }
-    public void setAge(String age) {
-        this.age = age;
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
     }
+
     public Patient(){
             this.setRole(TypeRole.PATIENT);
         }

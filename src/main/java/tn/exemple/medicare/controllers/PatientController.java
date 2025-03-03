@@ -14,6 +14,4 @@ import tn.exemple.medicare.services.IPatient;
 @RequiredArgsConstructor
 public class PatientController {
     private IPatient iPatient;
-    /*@PostMapping("/addpatient")
-    Patient addPatient(@RequestBody Patient p){ return iPatient.addPatient(p);}*/
-}
+    }

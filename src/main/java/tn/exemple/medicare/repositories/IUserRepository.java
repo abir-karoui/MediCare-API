@@ -6,10 +6,11 @@ import tn.exemple.medicare.entities.User;
 import tn.exemple.medicare.enums.TypeRole;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface IUserRepository extends JpaRepository<User, Long> {
     List<User> findAllByRole(TypeRole role);
-    User findByEmail(String email);
+    Optional<User> findByEmail(String email);
 
 }
