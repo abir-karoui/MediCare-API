@@ -21,7 +21,6 @@ public class MedicationServices implements IMedicationServices {
     public MedicationServices(IMedicationRepository iMedicationRepository) {
         this.iMedicationRepository = iMedicationRepository;
     }
-
     @Override
     public Medication addMedications(Medication medications) {
         return iMedicationRepository.save(medications);

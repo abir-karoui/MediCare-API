@@ -21,11 +21,14 @@ import java.util.stream.Collectors;
 @Component
 
 public class JwtService { // service responsable a gener tokne , decode , extract info from token validate token ect kol chy tebaa token
+    @Value("${jwt.secret-key}")
+    private  String secretKey;
+
     @Value("${jwt.expiration}")
     private  long jwtExpiration;
 
-@Value("${jwt.secret-key}")
-private  String secretKey;
+    @Value("${jwt.refresh-token.expiration}")
+    private  long refreshExpiration;
     public String extractUsername(String token) {
         return  extractClaim(token, Claims::getSubject);
     }
@@ -34,7 +37,6 @@ private  String secretKey;
         final  Claims claims = extractAllClaims(token);
         return claimResolver.apply(claims);
     }
-
     private Claims extractAllClaims(String token) {
         return  Jwts
                 .parserBuilder()
@@ -43,7 +45,6 @@ private  String secretKey;
                 .parseClaimsJws(token)
                 .getBody();
     }
-
     public  String generateToken(UserDetails userDetails){
         return  generateToken(new HashMap<>(), userDetails);
     }
@@ -53,10 +54,14 @@ private  String secretKey;
         return buildToken(claims, userDetails , jwtExpiration);
     }
 
+    public String generateRefreshToken(UserDetails userDetails) {
+
+        return buildToken(new HashMap<>(), userDetails ,refreshExpiration);
+    }
     private String buildToken
             (HashMap<String, Object> extraClaims,
              UserDetails userDetails, long
-                     jwtExpiration) {
+                     expiration) {
         var authorities = userDetails.getAuthorities()
                 .stream() //list
                 .map(GrantedAuthority::getAuthority)
@@ -65,7 +70,7 @@ private  String secretKey;
                    .builder().setClaims(extraClaims)
                    .setSubject(userDetails.getUsername())
                    .setIssuedAt(new Date(System.currentTimeMillis()))
-                   .setExpiration(new Date(System.currentTimeMillis()+jwtExpiration ))
+                   .setExpiration(new Date(System.currentTimeMillis()+ expiration ))
                    .claim("authorities" , authorities)
                    .signWith(getSignInKey())
                    .compact();

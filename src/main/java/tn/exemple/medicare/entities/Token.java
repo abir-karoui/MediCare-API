@@ -2,17 +2,16 @@ package tn.exemple.medicare.entities;
 
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-//@Builder
+@Builder
+@Getter
+@Setter
 public class Token {
     @Id
     @GeneratedValue
@@ -21,54 +20,6 @@ public class Token {
     private LocalDateTime createdAt;
     private LocalDateTime expiredAt;
     private LocalDateTime validateAt;
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getExpiredAt() {
-        return expiredAt;
-    }
-
-    public void setExpiredAt(LocalDateTime expiredAt) {
-        this.expiredAt = expiredAt;
-    }
-
-    public LocalDateTime getValidateAt() {
-        return validateAt;
-    }
-
-    public void setValidateAt(LocalDateTime validateAt) {
-        this.validateAt = validateAt;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
 
     @ManyToOne
     @JoinColumn(name = "userId" , nullable = false)

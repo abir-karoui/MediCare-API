@@ -1,10 +1,18 @@
 package tn.exemple.medicare.services.impl;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Service;
 import tn.exemple.medicare.configs.JwtService;
 import tn.exemple.medicare.controllers.AuthenticationRequest;
@@ -19,6 +27,7 @@ import tn.exemple.medicare.repositories.IUserRepository;
 import tn.exemple.medicare.repositories.TokenRepository;
 import tn.exemple.medicare.services.IUserSevices;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -26,7 +35,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+
 @Service
+
 public class UserServices implements IUserSevices {
     private final IUserRepository iUserRepository;
     private final PasswordEncoder passwordEncoder;
@@ -48,12 +60,13 @@ public class UserServices implements IUserSevices {
 
     @Override
 
-    public User addUser(User user) throws MessagingException {
+    public AuthenticationResponse  addUser(User user) throws MessagingException {
         Optional<User> existingUser = iUserRepository.findByEmail(user.getEmail());
         if (existingUser.isPresent()) {
             throw new IllegalArgumentException("Email already exists");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setEnabled(false);
         User savedUser;
         if (user.getRole() == TypeRole.DOCTOR) {
             Doctor doctor = (Doctor) user;
@@ -64,10 +77,12 @@ public class UserServices implements IUserSevices {
         } else {
             throw new IllegalArgumentException("Invalid user role");
         }
+        var jwtToken = jwtService.generateToken(savedUser);
+        var refreshToken = jwtService.generateRefreshToken(savedUser);
         sendValidationEmail(savedUser);
-        return savedUser;
+        return new AuthenticationResponse(jwtToken, refreshToken);
     }
-    private void sendValidationEmail(User user) throws MessagingException {
+    public void sendValidationEmail(User user) throws MessagingException {
         var newToken = generateAndSaveActivationToken(user);
             emailService.sendEmail(
                     user.getEmail(),
@@ -77,25 +92,6 @@ public class UserServices implements IUserSevices {
                     "Account activation" );
 
     }
-
-   /* private void sendValidationEmail(User user) {
-        var newToken = generateAndSaveActivationToken(user);
-        //send email
-
-
-    }*/
-
-    /*private String generateAndSaveActivationToken(User user) {
-        //generate Token
-        String generateToken = generateActivationCode(6);
-        var token = Token.builder()
-                .createdAt(LocalDateTime.now())
-                .expiredAt(LocalDateTime.now().plusMinutes(15))
-                .user(user)
-                .build();
-      tokenRepository.save(token);
-      return generateToken;
-    }*/
     private String generateAndSaveActivationToken(User user) {
         String generateToken = generateActivationCode(6);
         Token token = new Token();
@@ -118,6 +114,70 @@ public class UserServices implements IUserSevices {
         return  codeBuilder.toString();
     }
 
+
+    @Override
+    public AuthenticationResponse login(AuthenticationRequest request) {
+        var auth = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
+        var claims = new HashMap<String, Object>();
+        var user = ((User)auth.getPrincipal());
+        claims.put("fullName" , user.fullName());
+        var jwtToken = jwtService.generateToken(claims , user);
+        var refreshToken = jwtService.generateRefreshToken(user);
+        return AuthenticationResponse.builder().accessToken(jwtToken).refreshToken(refreshToken).build();
+    }
+
+    @Override
+    public void changePassword(ChangePasswordRequest request , Principal connectedUser) {
+         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+    if (! passwordEncoder.matches(request.getCurrentPassword() , user.getPassword())){
+         throw new IllegalStateException("Wrong password");
+    }
+    if (!request.getNewPassword().equals(request.getConfirmationPassword())){
+        throw   new IllegalStateException("Password are not the same");
+    }
+    user.setPassword((passwordEncoder.encode(request.getNewPassword()))); //update
+    iUserRepository.save(user);
+    }
+
+    @Override
+    public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        final String authHeader = request.getHeader(AUTHORIZATION);
+        final String refreshToken ;
+        final  String userEmail;
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return;
+        }
+
+        refreshToken = authHeader.substring(7); //7 c'est Bearer avec espace en fin
+        userEmail  = jwtService.extractUsername(refreshToken);
+        if(userEmail != null) {
+            var  userDetails =this.iUserRepository.findByEmail(userEmail).orElseThrow();
+            if(jwtService.isTokenValid(refreshToken, userDetails)){
+               var accessToken = jwtService.generateToken(userDetails);
+               var authResponse = AuthenticationResponse.builder().accessToken(accessToken).refreshToken(refreshToken).build();
+               new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
+
+
+            }
+        }
+    }
+
+    @Override
+    public void activateAccount(String token) throws MessagingException {
+        Token savedToken = tokenRepository.findByToken(token).orElseThrow(() -> new RuntimeException("Invalid Token"));
+        if (LocalDateTime.now().isAfter(savedToken.getExpiredAt())){
+            sendValidationEmail(savedToken.getUser());
+            throw  new RuntimeException("Activation token has expired , Anew token has been send ");
+        }
+        var user = iUserRepository.findById(savedToken.getUser().getId())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        user.setEnabled(true);
+        iUserRepository.save(user);
+        savedToken.setValidateAt(LocalDateTime.now());
+        tokenRepository.save(savedToken);
+    }
     @Override
     public List<User> retrieveAllUsers() {
         return iUserRepository.findAll();
@@ -125,7 +185,7 @@ public class UserServices implements IUserSevices {
 
     @Override
     public Optional<User> getUserById(Long id) {
-          return iUserRepository.findById(id);
+        return iUserRepository.findById(id);
     }
 
     @Override
@@ -151,35 +211,24 @@ public class UserServices implements IUserSevices {
 
     @Override
     public void deleteAllUser() {
-         iUserRepository.deleteAll();
+        iUserRepository.deleteAll();
     }
 
-    @Override
-    public AuthenticationResponse login(AuthenticationRequest request) {
-        var auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
-        var claims = new HashMap<String, Object>();
-        var user = ((User)auth.getPrincipal());
-        claims.put("fullName" , user.fullName());
-        var jwtToken = jwtService.generateToken(claims , user);
-
-        return new AuthenticationResponse(jwtToken);
-        //return AuthenticationResponse.builder().token(jwtToken).build();
-    }
-
-    @Override
-    public void changePassword(ChangePasswordRequest request , Principal connectedUser) {
-         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
-    if (! passwordEncoder.matches(request.getCurrentPassword() , user.getPassword())){
-         throw new IllegalStateException("Wrong password");
-    }
-    if (!request.getNewPassword().equals(request.getConfirmationPassword())){
-        throw   new IllegalStateException("Password are not the same");
-    }
-    user.setPassword((passwordEncoder.encode(request.getNewPassword()))); //update
-    iUserRepository.save(user);
-    }
 
 
 }
+
+
+
+
+   /* private void revokeAllUserToken(User user){
+        var validUserTokens =tokenRepository.findAllValidTokenByUser(user.getId());
+        if (validUserTokens.isEmpty())
+            return; ;
+            validUserTokens.forEach(token -> {
+                token.setValidateAt();
+                token.setExpiredAt();
+
+            });
+            tokenRepository.saveAll(validUserTokens);
+    }*/

@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
-import tn.exemple.medicare.exceptions.UserException;
+
 
 @ControllerAdvice
 public class GlobalExceptionHandler {

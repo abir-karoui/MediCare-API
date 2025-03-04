@@ -2,6 +2,8 @@ package tn.exemple.medicare.controllers;
 
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,7 @@ import tn.exemple.medicare.enums.TypeRole;
 import tn.exemple.medicare.exceptions.UserException;
 import tn.exemple.medicare.services.IUserSevices;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
@@ -35,10 +38,6 @@ public class UserController {
     @Autowired
     private UserDetailsServices userDetailsServices;
 
-   /* @PostMapping("/adduser")
-    public ResponseEntity<?> addUser(@RequestBody User u) {
-         return ResponseEntity.ok( iUserSevices.addUser(u));
-    }*/
     @PostMapping("/adduser")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public ResponseEntity<?> addUser(@RequestBody @Valid User u) throws MessagingException {
@@ -50,11 +49,20 @@ public class UserController {
     public ResponseEntity<AuthenticationResponse> login(@RequestBody @Valid AuthenticationRequest request) {
         return ResponseEntity.ok( iUserSevices.login(request));
     }
+    @GetMapping("/activate-account")
+    public  void confirm(@RequestParam String token) throws MessagingException {
+        iUserSevices.activateAccount(token);
+    }
     @PatchMapping("/changePassword")
     public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request , Principal connectedUser) {
         iUserSevices.changePassword(request , connectedUser);
         return  ResponseEntity.accepted().build();
          }
+
+    @PostMapping("/refresh-token")
+    public void refreshToken(HttpServletRequest request , HttpServletResponse response) throws IOException {
+  iUserSevices.refreshToken(request , response) ;
+    }
 
     @GetMapping("/all")
     public  ResponseEntity<List<User>> retrieveAllUsers() {

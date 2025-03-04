@@ -1,10 +1,7 @@
 package tn.exemple.medicare.entities;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.security.core.GrantedAuthority;
@@ -35,6 +32,8 @@ import java.util.List;
         @JsonSubTypes.Type(value = Patient.class, name = "PATIENT")
 })
 @EntityListeners(AuditingEntityListener.class)
+@Getter
+@Setter
 
 public  class User implements Serializable , UserDetails , Principal {
     @Id
@@ -59,29 +58,23 @@ public  class User implements Serializable , UserDetails , Principal {
     private boolean accountLocked;
     @JsonIgnore
     private boolean enabled ;
+
+
     public boolean isAccountLocked() {
-        return false;
-    }
-    public void setAccountLocked(boolean accountLocked) {
-        this.accountLocked = accountLocked;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    /*public boolean isAccountLocked() {
         return accountLocked;
     }
 
     public void setAccountLocked(boolean accountLocked) {
         this.accountLocked = accountLocked;
     }
-
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
-*/
+
     public LocalDateTime getCreateDate() {
         return createDate;
     }
@@ -98,7 +91,6 @@ public  class User implements Serializable , UserDetails , Principal {
         this.lastModifieDate = lastModifieDate;
     }
 
-
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createDate;
@@ -107,84 +99,6 @@ public  class User implements Serializable , UserDetails , Principal {
     @Column(insertable = false)
     private LocalDateTime lastModifieDate;
 
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public String getFirstname() {
-        return firstname;
-    }
-
-    public void setFirstname(String firstname) {
-        this.firstname = firstname;
-    }
-
-    public String getLastname() {
-        return lastname;
-    }
-
-    public void setLastname(String lastname) {
-        this.lastname = lastname;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getPhoto() {
-        return photo;
-    }
-
-    public void setPhoto(String photo) {
-        this.photo = photo;
-    }
-
-    public TypeRole getRole() {
-        return role;
-    }
-
-    public void setRole(TypeRole role) {
-        this.role = role;
-    }
-
-    public TypeGender getGender() {
-        return gender;
-    }
-    public void setGender(TypeGender gender) {
-        this.gender = gender;
-    }
     @Override
     public String getName() {
         return email;
@@ -205,12 +119,6 @@ public  class User implements Serializable , UserDetails , Principal {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
-    }
-
-
-    @Override
-    public boolean isEnabled() {
         return true;
     }
 
