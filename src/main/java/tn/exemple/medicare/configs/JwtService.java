@@ -58,6 +58,9 @@ public class JwtService { // service responsable a gener tokne , decode , extrac
 
         return buildToken(new HashMap<>(), userDetails ,refreshExpiration);
     }
+    public long getRefreshTokenExpiration() {
+        return refreshExpiration;
+    }
     private String buildToken
             (HashMap<String, Object> extraClaims,
              UserDetails userDetails, long

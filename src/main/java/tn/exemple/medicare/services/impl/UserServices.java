@@ -4,6 +4,7 @@ import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,18 +19,17 @@ import tn.exemple.medicare.configs.JwtService;
 import tn.exemple.medicare.controllers.AuthenticationRequest;
 import tn.exemple.medicare.controllers.AuthenticationResponse;
 import tn.exemple.medicare.controllers.ChangePasswordRequest;
-import tn.exemple.medicare.entities.Doctor;
-import tn.exemple.medicare.entities.Patient;
-import tn.exemple.medicare.entities.Token;
+import tn.exemple.medicare.entities.*;
 import tn.exemple.medicare.enums.TypeRole;
-import tn.exemple.medicare.entities.User;
 import tn.exemple.medicare.repositories.IUserRepository;
+import tn.exemple.medicare.repositories.RefreshTokenRepositroty;
 import tn.exemple.medicare.repositories.TokenRepository;
 import tn.exemple.medicare.services.IUserSevices;
 
 import java.io.IOException;
 import java.security.Principal;
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +38,7 @@ import java.util.Optional;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @Service
+@RequiredArgsConstructor
 
 public class UserServices implements IUserSevices {
     private final IUserRepository iUserRepository;
@@ -46,17 +47,19 @@ public class UserServices implements IUserSevices {
     private  final JwtService jwtService ;
     private  final TokenRepository tokenRepository;
     private final EmailService emailService ;
+    private final RefreshTokenRepositroty refreshTokenRepositroty;
+
 
     @Value("${activation.url}")
     private String activationUrl;
-    public UserServices(IUserRepository iUserRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService, TokenRepository tokenRepository, EmailService emailService) {
+   /* public UserServices(IUserRepository iUserRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService, TokenRepository tokenRepository, EmailService emailService) {
         this.iUserRepository = iUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.tokenRepository = tokenRepository;
         this.emailService = emailService;
-    }
+    }*/
 
     @Override
 
@@ -125,6 +128,7 @@ public class UserServices implements IUserSevices {
         claims.put("fullName" , user.fullName());
         var jwtToken = jwtService.generateToken(claims , user);
         var refreshToken = jwtService.generateRefreshToken(user);
+        saveRefreshToken(user, refreshToken);
         return AuthenticationResponse.builder().accessToken(jwtToken).refreshToken(refreshToken).build();
     }
 
@@ -141,7 +145,7 @@ public class UserServices implements IUserSevices {
     iUserRepository.save(user);
     }
 
-    @Override
+   /* @Override
     public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
         final String authHeader = request.getHeader(AUTHORIZATION);
         final String refreshToken ;
@@ -162,6 +166,45 @@ public class UserServices implements IUserSevices {
 
             }
         }
+    }*/
+   @Override
+   public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+       final String authHeader = request.getHeader(AUTHORIZATION);
+       final String refreshToken;
+       final String userEmail;
+
+       if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+           return;
+       }
+
+       refreshToken = authHeader.substring(7); // "Bearer " a une longueur de 7
+       userEmail = jwtService.extractUsername(refreshToken);
+
+       if (userEmail != null) {
+           var userDetails = this.iUserRepository.findByEmail(userEmail).orElseThrow();
+           var storedRefreshToken = refreshTokenRepositroty.findByRefreshToken(refreshToken) //bch kifh user yabaath refreshToken bch yaamil access token jdid yet2aed mawjouf f database
+                   .orElseThrow(() -> new RuntimeException("Refresh token NOT FOUND"));
+
+           if (jwtService.isTokenValid(refreshToken, userDetails) && !storedRefreshToken.getExpiredAt().isBefore(Instant.now())) {
+               var accessToken = jwtService.generateToken(userDetails);
+               var authResponse = AuthenticationResponse.builder()
+                       .accessToken(accessToken)
+                       .refreshToken(refreshToken)
+                       .build();
+               new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
+           } else {
+               throw new RuntimeException("Refresh token invalide ou expiré");
+           }
+       }
+   }
+    private void saveRefreshToken(User user, String refreshToken) {
+        var token = RefreshToken.builder()
+                .user(user)
+                .createdAt(Instant.now())
+                .refreshToken(refreshToken)
+                .expiredAt((Instant.now().plusMillis(jwtService.getRefreshTokenExpiration()))).build();
+                refreshTokenRepositroty.save(token);
+
     }
 
     @Override
@@ -213,7 +256,6 @@ public class UserServices implements IUserSevices {
     public void deleteAllUser() {
         iUserRepository.deleteAll();
     }
-
 
 
 }
