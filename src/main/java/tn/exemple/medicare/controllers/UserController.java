@@ -66,7 +66,7 @@ public class UserController {
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestParam String email) {
         iUserSevices.requestPasswordReset(email);
-        return ResponseEntity.ok("Un lien de réinitialisation de mot de passe a été envoyé à votre email");
+        return ResponseEntity.ok("A password reset link has been sent to your email");
     }
 
     @PostMapping("/reset-password")
@@ -74,7 +74,7 @@ public class UserController {
             @RequestParam String token,
             @RequestParam String newPassword) {
         iUserSevices.resetPassword(token, newPassword);
-        return ResponseEntity.ok("Mot de passe réinitialisé avec succès");
+        return ResponseEntity.ok("Password successfully reset.");
     }
 
 
