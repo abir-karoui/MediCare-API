@@ -32,5 +32,8 @@ public interface IUserSevices {
     User UpdateUser(Long id , User user) ;
     void  deleteUserById(Long id);
     void deleteAllUser();
+    void requestPasswordReset(String email);
+    void sendPasswordResetEmail(String email, String token);
+    void resetPassword(String token, String newPassword);
 
 }

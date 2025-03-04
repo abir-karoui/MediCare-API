@@ -135,4 +135,9 @@ public  class User implements Serializable , UserDetails , Principal {
     public String fullName(){
         return  firstname + " " + lastname;
     }
+
+    @OneToMany(mappedBy = "user")
+    private  List<Token> tokens;
+    @OneToMany(mappedBy = "user")
+    private  List<RefreshToken> refreshTokens;
 }

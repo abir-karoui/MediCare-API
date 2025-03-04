@@ -6,14 +6,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Service;
 import tn.exemple.medicare.configs.JwtService;
 import tn.exemple.medicare.controllers.AuthenticationRequest;
@@ -22,6 +20,7 @@ import tn.exemple.medicare.controllers.ChangePasswordRequest;
 import tn.exemple.medicare.entities.*;
 import tn.exemple.medicare.enums.TypeRole;
 import tn.exemple.medicare.repositories.IUserRepository;
+import tn.exemple.medicare.repositories.PasswordResetTokenRepository;
 import tn.exemple.medicare.repositories.RefreshTokenRepositroty;
 import tn.exemple.medicare.repositories.TokenRepository;
 import tn.exemple.medicare.services.IUserSevices;
@@ -34,6 +33,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
@@ -41,6 +41,7 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 @RequiredArgsConstructor
 
 public class UserServices implements IUserSevices {
+
     private final IUserRepository iUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
@@ -48,18 +49,11 @@ public class UserServices implements IUserSevices {
     private  final TokenRepository tokenRepository;
     private final EmailService emailService ;
     private final RefreshTokenRepositroty refreshTokenRepositroty;
-
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final JavaMailSender mailSender;
 
     @Value("${activation.url}")
     private String activationUrl;
-   /* public UserServices(IUserRepository iUserRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService, TokenRepository tokenRepository, EmailService emailService) {
-        this.iUserRepository = iUserRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.authenticationManager = authenticationManager;
-        this.jwtService = jwtService;
-        this.tokenRepository = tokenRepository;
-        this.emailService = emailService;
-    }*/
 
     @Override
 
@@ -144,29 +138,6 @@ public class UserServices implements IUserSevices {
     user.setPassword((passwordEncoder.encode(request.getNewPassword()))); //update
     iUserRepository.save(user);
     }
-
-   /* @Override
-    public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        final String authHeader = request.getHeader(AUTHORIZATION);
-        final String refreshToken ;
-        final  String userEmail;
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return;
-        }
-
-        refreshToken = authHeader.substring(7); //7 c'est Bearer avec espace en fin
-        userEmail  = jwtService.extractUsername(refreshToken);
-        if(userEmail != null) {
-            var  userDetails =this.iUserRepository.findByEmail(userEmail).orElseThrow();
-            if(jwtService.isTokenValid(refreshToken, userDetails)){
-               var accessToken = jwtService.generateToken(userDetails);
-               var authResponse = AuthenticationResponse.builder().accessToken(accessToken).refreshToken(refreshToken).build();
-               new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
-
-
-            }
-        }
-    }*/
    @Override
    public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
        final String authHeader = request.getHeader(AUTHORIZATION);
@@ -193,7 +164,7 @@ public class UserServices implements IUserSevices {
                        .build();
                new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
            } else {
-               throw new RuntimeException("Refresh token invalide ou expiré");
+               throw new RuntimeException("Invalid or expired refresh token");
            }
        }
    }
@@ -257,6 +228,44 @@ public class UserServices implements IUserSevices {
         iUserRepository.deleteAll();
     }
 
+
+    public void requestPasswordReset(String email) { //hedhi bch nlawej user b mail w nabaath token ctt
+        User user = iUserRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User Not found"));
+
+        String token = UUID.randomUUID().toString(); //UUID khater token mefih hata donnée aa ue jst des num
+        PasswordResetToken resetToken = PasswordResetToken.builder()
+                .resetToken(token)
+                .createdAt(LocalDateTime.now())
+                .expiredAt(LocalDateTime.now().plusMinutes(15))
+                .user(user)
+                .build();
+        passwordResetTokenRepository.save(resetToken);
+        sendPasswordResetEmail(user.getEmail(), token);
+    }
+
+    public void sendPasswordResetEmail(String email, String token) {
+        String resetUrl = "http://localhost:8080/user/reset-password?token=" + token;
+
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(email);
+        mailMessage.setSubject("Password Reset");
+        mailMessage.setText("To reset your password, click on the link below :\n" + resetUrl);
+
+        mailSender.send(mailMessage);
+    }
+
+    public void resetPassword(String token, String newPassword) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByResetToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid Token"));
+        if (resetToken.getExpiredAt().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("The token has expired");
+        }
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        iUserRepository.save(user);
+        passwordResetTokenRepository.delete(resetToken);
+    }
 
 }
 

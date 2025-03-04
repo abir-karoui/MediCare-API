@@ -63,6 +63,21 @@ public class UserController {
     public void refreshToken(HttpServletRequest request , HttpServletResponse response) throws IOException {
    iUserSevices.refreshToken(request , response) ;
     }
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestParam String email) {
+        iUserSevices.requestPasswordReset(email);
+        return ResponseEntity.ok("Un lien de réinitialisation de mot de passe a été envoyé à votre email");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(
+            @RequestParam String token,
+            @RequestParam String newPassword) {
+        iUserSevices.resetPassword(token, newPassword);
+        return ResponseEntity.ok("Mot de passe réinitialisé avec succès");
+    }
+
+
 
     @GetMapping("/all")
     public  ResponseEntity<List<User>> retrieveAllUsers() {
