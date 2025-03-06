@@ -1,11 +1,11 @@
-package tn.exemple.medicare.entities;
+package tn.exemple.medicare.entities.auth;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @Entity
 @AllArgsConstructor
@@ -20,8 +20,9 @@ public class RefreshToken {
     private  String refreshToken ;
     private Instant createdAt;
     private Instant expiredAt;
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "userId" , nullable = false)
-    private  User user;
+    private User user;
 
 }

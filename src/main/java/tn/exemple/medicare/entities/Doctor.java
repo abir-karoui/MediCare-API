@@ -2,6 +2,7 @@ package tn.exemple.medicare.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import tn.exemple.medicare.entities.auth.User;
 import tn.exemple.medicare.enums.TypeRole;
 
 import java.util.Set;

@@ -1,4 +1,4 @@
-package tn.exemple.medicare.entities;
+package tn.exemple.medicare.entities.auth;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.*;
@@ -7,13 +7,14 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import tn.exemple.medicare.entities.Doctor;
+import tn.exemple.medicare.entities.Patient;
 import tn.exemple.medicare.enums.TypeGender;
 import tn.exemple.medicare.enums.TypeRole;
 
 import javax.security.auth.Subject;
 import java.io.Serializable;
 import java.security.Principal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -38,16 +39,15 @@ import java.util.List;
 public  class User implements Serializable , UserDetails , Principal {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-     long id;
+    private long id;
     private String firstname;
     private String lastname;
-
     @Column(unique = true)
     private String email;
-
     private String password;
     private String phone;
     private String address;
+
     private String photo;
     @Enumerated(EnumType.STRING)
     private TypeRole role;
@@ -136,8 +136,12 @@ public  class User implements Serializable , UserDetails , Principal {
         return  firstname + " " + lastname;
     }
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
-    private  List<Token> tokens;
+    private  List<Codes> codes;
+
+
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
     private  List<RefreshToken> refreshTokens;
 }

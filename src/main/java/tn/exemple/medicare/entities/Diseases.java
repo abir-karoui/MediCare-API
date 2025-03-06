@@ -30,6 +30,7 @@ public class Diseases implements Serializable {
     public void setName(String name) {
         this.name = name;
     }
+
     @ManyToMany(mappedBy = "diseases")
     Set<Patient> patients;
 

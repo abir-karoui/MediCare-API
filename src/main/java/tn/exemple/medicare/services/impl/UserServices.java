@@ -4,8 +4,8 @@ import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,15 +14,14 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import tn.exemple.medicare.configs.JwtService;
-import tn.exemple.medicare.controllers.AuthenticationRequest;
-import tn.exemple.medicare.controllers.AuthenticationResponse;
-import tn.exemple.medicare.controllers.ChangePasswordRequest;
+import tn.exemple.medicare.controllers.authcontrollers.AuthenticationRequest;
+import tn.exemple.medicare.controllers.authcontrollers.AuthenticationResponse;
+import tn.exemple.medicare.controllers.authcontrollers.ChangePasswordRequest;
 import tn.exemple.medicare.entities.*;
+import tn.exemple.medicare.entities.auth.*;
+import tn.exemple.medicare.enums.TypeCode;
 import tn.exemple.medicare.enums.TypeRole;
-import tn.exemple.medicare.repositories.IUserRepository;
-import tn.exemple.medicare.repositories.PasswordResetTokenRepository;
-import tn.exemple.medicare.repositories.RefreshTokenRepositroty;
-import tn.exemple.medicare.repositories.TokenRepository;
+import tn.exemple.medicare.repositories.*;
 import tn.exemple.medicare.services.IUserSevices;
 
 import java.io.IOException;
@@ -46,18 +45,16 @@ public class UserServices implements IUserSevices {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private  final JwtService jwtService ;
-    private  final TokenRepository tokenRepository;
+    private final CodeRepository codeRepository;
     private final EmailService emailService ;
     private final RefreshTokenRepositroty refreshTokenRepositroty;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final JavaMailSender mailSender;
 
-    @Value("${activation.url}")
-    private String activationUrl;
 
     @Override
 
-    public AuthenticationResponse  addUser(User user) throws MessagingException {
+    public AuthenticationResponse  singUp(User user) throws MessagingException {
         Optional<User> existingUser = iUserRepository.findByEmail(user.getEmail());
         if (existingUser.isPresent()) {
             throw new IllegalArgumentException("Email already exists");
@@ -76,31 +73,37 @@ public class UserServices implements IUserSevices {
         }
         var jwtToken = jwtService.generateToken(savedUser);
         var refreshToken = jwtService.generateRefreshToken(savedUser);
+        saveRefreshToken(savedUser, refreshToken);
         sendValidationEmail(savedUser);
-        return new AuthenticationResponse(jwtToken, refreshToken);
+        return AuthenticationResponse.builder()
+                .accessToken(jwtToken)
+                .refreshToken(refreshToken)
+                .build();
     }
-    public void sendValidationEmail(User user) throws MessagingException {
-        var newToken = generateAndSaveActivationToken(user);
+    public void sendValidationEmail(User user ) throws MessagingException {
+        var newToken = generateAndSaveActivationCode(user);
             emailService.sendEmail(
                     user.getEmail(),
                     user.getUsername(),
-                    activationUrl,
                     newToken,
-                    "Account activation" );
+                    "Account activation" ,
+                    TypeCode.ACTIVATION);
 
     }
-    private String generateAndSaveActivationToken(User user) {
-        String generateToken = generateActivationCode(6);
-        Token token = new Token();
-        token.setToken(generateToken);
-        token.setCreatedAt(LocalDateTime.now());
-        token.setExpiredAt(LocalDateTime.now().plusMinutes(15));
-        token.setUser(user);
-        tokenRepository.save(token);
-        return generateToken;
+    private String generateAndSaveActivationCode(User user ) {
+        String generateCode = generateCode(6);
+        Codes codes = Codes.builder()
+                .code(generateCode)
+                .typecode(TypeCode.ACTIVATION)
+                .createdAt(LocalDateTime.now())
+                .expiredAt(LocalDateTime.now().plusMinutes(15))
+                .user(user)
+                .build();
+        codeRepository.save(codes);
+        return generateCode;
     }
 
-    private String generateActivationCode(int length) {
+    private String generateCode(int length) {
         String characters = "0123456789";
         StringBuilder codeBuilder = new StringBuilder();
         SecureRandom secureRandom = new SecureRandom();
@@ -109,6 +112,24 @@ public class UserServices implements IUserSevices {
             codeBuilder.append(characters.charAt(randomIndex));
         }
         return  codeBuilder.toString();
+    }
+    @Override
+    public void activateAccount(String code) throws MessagingException {
+
+        Codes savedCode = codeRepository.findByCode(code).orElseThrow(() -> new RuntimeException("Invalid Code"));
+        if (savedCode.getTypecode() != TypeCode.ACTIVATION) {
+            throw new RuntimeException("Invalid activation code");
+        }
+        if (LocalDateTime.now().isAfter(savedCode.getExpiredAt())){
+            sendValidationEmail(savedCode.getUser());
+            throw  new RuntimeException("Activation code has expired , Anew code has been send ");
+        }
+        var user = iUserRepository.findById(savedCode.getUser().getId())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        user.setEnabled(true);
+        iUserRepository.save(user);
+        savedCode.setValidateAt(LocalDateTime.now());
+        codeRepository.save(savedCode);
     }
 
 
@@ -122,6 +143,7 @@ public class UserServices implements IUserSevices {
         claims.put("fullName" , user.fullName());
         var jwtToken = jwtService.generateToken(claims , user);
         var refreshToken = jwtService.generateRefreshToken(user);
+
         saveRefreshToken(user, refreshToken);
         return AuthenticationResponse.builder().accessToken(jwtToken).refreshToken(refreshToken).build();
     }
@@ -139,6 +161,7 @@ public class UserServices implements IUserSevices {
     iUserRepository.save(user);
     }
    @Override
+   //Renouveler access token avec Refresh
    public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
        final String authHeader = request.getHeader(AUTHORIZATION);
        final String refreshToken;
@@ -175,23 +198,10 @@ public class UserServices implements IUserSevices {
                 .refreshToken(refreshToken)
                 .expiredAt((Instant.now().plusMillis(jwtService.getRefreshTokenExpiration()))).build();
                 refreshTokenRepositroty.save(token);
-
     }
 
-    @Override
-    public void activateAccount(String token) throws MessagingException {
-        Token savedToken = tokenRepository.findByToken(token).orElseThrow(() -> new RuntimeException("Invalid Token"));
-        if (LocalDateTime.now().isAfter(savedToken.getExpiredAt())){
-            sendValidationEmail(savedToken.getUser());
-            throw  new RuntimeException("Activation token has expired , Anew token has been send ");
-        }
-        var user = iUserRepository.findById(savedToken.getUser().getId())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        user.setEnabled(true);
-        iUserRepository.save(user);
-        savedToken.setValidateAt(LocalDateTime.now());
-        tokenRepository.save(savedToken);
-    }
+
+
     @Override
     public List<User> retrieveAllUsers() {
         return iUserRepository.findAll();
@@ -267,19 +277,10 @@ public class UserServices implements IUserSevices {
         passwordResetTokenRepository.delete(resetToken);
     }
 
+    @Transactional
+    public void logout(User user) {
+        refreshTokenRepositroty.deleteByUser(user);
+    }
+
 }
 
-
-
-
-   /* private void revokeAllUserToken(User user){
-        var validUserTokens =tokenRepository.findAllValidTokenByUser(user.getId());
-        if (validUserTokens.isEmpty())
-            return; ;
-            validUserTokens.forEach(token -> {
-                token.setValidateAt();
-                token.setExpiredAt();
-
-            });
-            tokenRepository.saveAll(validUserTokens);
-    }*/

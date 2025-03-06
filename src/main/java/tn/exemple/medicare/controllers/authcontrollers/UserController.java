@@ -1,4 +1,4 @@
-package tn.exemple.medicare.controllers;
+package tn.exemple.medicare.controllers.authcontrollers;
 
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
@@ -10,20 +10,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import tn.exemple.medicare.configs.JwtService;
 import tn.exemple.medicare.configs.UserDetailsServices;
-import tn.exemple.medicare.entities.User;
+import tn.exemple.medicare.entities.auth.User;
 import tn.exemple.medicare.enums.TypeRole;
-import tn.exemple.medicare.exceptions.UserException;
 import tn.exemple.medicare.services.IUserSevices;
 
 import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/user")
@@ -40,18 +37,17 @@ public class UserController {
 
     @PostMapping("/adduser")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public ResponseEntity<?> addUser(@RequestBody @Valid User u) throws MessagingException {
-        iUserSevices.addUser(u);
+    public ResponseEntity<?> singUp(@RequestBody @Valid User u) throws MessagingException {
+        iUserSevices.singUp(u);
         return  ResponseEntity.accepted().build();
-
     }
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login(@RequestBody @Valid AuthenticationRequest request) {
         return ResponseEntity.ok( iUserSevices.login(request));
     }
     @GetMapping("/activate-account")
-    public  void confirm(@RequestParam String token) throws MessagingException {
-        iUserSevices.activateAccount(token);
+    public  void confirm(@RequestParam String code) throws MessagingException {
+        iUserSevices.activateAccount(code);
     }
     @PatchMapping("/changePassword")
     public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request , Principal connectedUser) {
@@ -75,6 +71,12 @@ public class UserController {
             @RequestParam String newPassword) {
         iUserSevices.resetPassword(token, newPassword);
         return ResponseEntity.ok("Password successfully reset.");
+    }
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(@AuthenticationPrincipal User user) {
+
+        iUserSevices.logout(user);
+        return ResponseEntity.ok("Logout successful");
     }
 
 

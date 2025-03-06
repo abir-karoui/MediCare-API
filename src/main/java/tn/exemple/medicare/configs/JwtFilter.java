@@ -26,7 +26,7 @@ public class JwtFilter extends OncePerRequestFilter {
     @Autowired
     private   UserDetailsServices userDetailsServices ;
     @Override
-    protected void doFilterInternal(
+    protected void doFilterInternal( //hedha bch valider Access Token a chaque requête.
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain)

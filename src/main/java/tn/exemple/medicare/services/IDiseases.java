@@ -1,8 +1,6 @@
 package tn.exemple.medicare.services;
 
 import tn.exemple.medicare.entities.Diseases;
-import tn.exemple.medicare.entities.User;
-import tn.exemple.medicare.enums.TypeRole;
 
 import java.util.List;
 

@@ -1,6 +1,6 @@
-package tn.exemple.medicare.entities;
+package tn.exemple.medicare.entities.auth;
 
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,18 +12,17 @@ import java.time.LocalDateTime;
 @Builder
 @Getter
 @Setter
-public class Token {
+public class PasswordResetToken {
     @Id
     @GeneratedValue
     private long id ;
-    private  String token ;
+    private  String resetToken ;
     private LocalDateTime createdAt;
     private LocalDateTime expiredAt;
-    private LocalDateTime validateAt;
 
-
-    @ManyToOne
-    @JoinColumn(name = "userId" , nullable = false)
-    private  User user;
+    @JsonIgnore
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
 }

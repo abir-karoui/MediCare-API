@@ -1,4 +1,4 @@
-package tn.exemple.medicare.controllers;
+package tn.exemple.medicare.controllers.authcontrollers;
 
 import lombok.*;
 

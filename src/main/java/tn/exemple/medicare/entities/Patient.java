@@ -2,7 +2,7 @@ package tn.exemple.medicare.entities;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import tn.exemple.medicare.entities.auth.User;
 import tn.exemple.medicare.enums.TypeRole;
 
 import java.time.LocalDate;
@@ -34,6 +34,7 @@ public class Patient extends User {
             joinColumns = @JoinColumn(name = "idPatient"),
             inverseJoinColumns = @JoinColumn(name = "idDoctor"))
     Set<Doctor> doctors;
+
     @ManyToMany
     @JoinTable(
             name = "patient_diseases",
