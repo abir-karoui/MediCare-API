@@ -19,7 +19,7 @@ public class EmailService {
              String username,
              String code,
              String subject,
-             TypeCode typeCode // Ajoute le paramètre TypeCode pour vérifier le type
+             TypeCode typeCode
      ) throws MessagingException {
           MimeMessage mimeMessage = mailSender.createMimeMessage();
           MimeMessageHelper helper = new MimeMessageHelper(
@@ -28,23 +28,19 @@ public class EmailService {
                   StandardCharsets.UTF_8.name()
           );
 
-          // Vérifie le type de code et adapte le message en conséquence
           String text;
           if (typeCode == TypeCode.ACTIVATION) {
                text = "Bonjour " + username + ",\n\n"
                        + "Voici votre code d'activation : " + code + "\n"
                        + "Cordialement,\n"
-                       + "L'équipe de support";
+                       + "L'équipe d'assistance technique de Medicare";
           } else if (typeCode == TypeCode.RESET) {
                text = "Bonjour " + username + ",\n\n"
                        + "Voici votre code de réinitialisation : " + code + "\n"
                        + "Cordialement,\n"
-                       + "L'équipe de support";
-          } else {
-               text = "Bonjour " + username + ",\n\n"
-                       + "Voici votre code : " + code + "\n"
-                       + "Cordialement,\n"
-                       + "L'équipe de support";
+                       + "L'équipe d'assistance technique de Medicare";
+          }else {
+               throw new IllegalArgumentException("Type de code inconnu");
           }
 
           helper.setFrom("abir.belkaroui@gmail.com");

@@ -1,5 +1,6 @@
 package tn.exemple.medicare.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -31,6 +32,7 @@ public class Diseases implements Serializable {
         this.name = name;
     }
 
+    @JsonIgnore
     @ManyToMany(mappedBy = "diseases")
     Set<Patient> patients;
 

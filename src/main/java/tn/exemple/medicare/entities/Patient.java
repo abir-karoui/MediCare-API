@@ -6,6 +6,7 @@ import tn.exemple.medicare.entities.auth.User;
 import tn.exemple.medicare.enums.TypeRole;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 
@@ -41,5 +42,6 @@ public class Patient extends User {
             joinColumns = @JoinColumn(name = "idPatient"),
             inverseJoinColumns = @JoinColumn(name = "idDiseases"))
     Set<Diseases> diseases ;
+
 }
 

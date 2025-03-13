@@ -29,10 +29,7 @@ import java.security.Principal;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
@@ -50,6 +47,8 @@ public class UserServices implements IUserSevices {
     private final RefreshTokenRepositroty refreshTokenRepositroty;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final JavaMailSender mailSender;
+    private final IDiseasesRepository iDiseasesRepository ;
+
 
 
     @Override
@@ -67,10 +66,12 @@ public class UserServices implements IUserSevices {
             savedUser = iUserRepository.save(doctor);
         } else if (user.getRole() == TypeRole.PATIENT) {
             Patient patient = (Patient) user;
+
             savedUser = iUserRepository.save(patient);
         } else {
             throw new IllegalArgumentException("Invalid user role");
         }
+
         var jwtToken = jwtService.generateToken(savedUser);
         var refreshToken = jwtService.generateRefreshToken(savedUser);
         saveRefreshToken(savedUser, refreshToken);
@@ -155,7 +156,7 @@ public class UserServices implements IUserSevices {
          throw new IllegalStateException("Wrong password");
     }
     if (!request.getNewPassword().equals(request.getConfirmationPassword())){
-        throw   new IllegalStateException("Password are not the same");
+        throw   new IllegalStateException("Password and confirmation do not match");
     }
     user.setPassword((passwordEncoder.encode(request.getNewPassword()))); //update
     iUserRepository.save(user);
@@ -239,42 +240,41 @@ public class UserServices implements IUserSevices {
     }
 
 
-    public void requestPasswordReset(String email) { //hedhi bch nlawej user b mail w nabaath token ctt
+    public void requestPasswordReset(String email) throws MessagingException { //hedhi bch nlawej user b mail w nabaath token ctt
         User user = iUserRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User Not found"));
-
-        String token = UUID.randomUUID().toString(); //UUID khater token mefih hata donnée aa ue jst des num
-        PasswordResetToken resetToken = PasswordResetToken.builder()
-                .resetToken(token)
+        String generateCode = generateCode(6);
+        Codes codes = Codes.builder()
+                .code(generateCode)
+                .typecode(TypeCode.RESET)
                 .createdAt(LocalDateTime.now())
                 .expiredAt(LocalDateTime.now().plusMinutes(15))
                 .user(user)
                 .build();
-        passwordResetTokenRepository.save(resetToken);
-        sendPasswordResetEmail(user.getEmail(), token);
+        codeRepository.save(codes);
+        sendResetEmail(user , generateCode);
+    }
+    public void sendResetEmail(User user , String code) throws MessagingException {
+        var newToken = generateAndSaveActivationCode(user);
+        emailService.sendEmail(
+                user.getEmail(),
+                user.getUsername(),
+                newToken,
+                "Password Reset" ,
+                TypeCode.RESET);
+
     }
 
-    public void sendPasswordResetEmail(String email, String token) {
-        String resetUrl = "http://localhost:8080/user/reset-password?token=" + token;
-
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setTo(email);
-        mailMessage.setSubject("Password Reset");
-        mailMessage.setText("To reset your password, click on the link below :\n" + resetUrl);
-
-        mailSender.send(mailMessage);
-    }
-
-    public void resetPassword(String token, String newPassword) {
-        PasswordResetToken resetToken = passwordResetTokenRepository.findByResetToken(token)
+    public void resetPassword(String code, String newPassword) {
+        Codes codes = codeRepository.findByCode(code)
                 .orElseThrow(() -> new RuntimeException("Invalid Token"));
-        if (resetToken.getExpiredAt().isBefore(LocalDateTime.now())) {
+        if (codes.getExpiredAt().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("The token has expired");
         }
-        User user = resetToken.getUser();
+        User user = codes.getUser();
         user.setPassword(passwordEncoder.encode(newPassword));
         iUserRepository.save(user);
-        passwordResetTokenRepository.delete(resetToken);
+        codeRepository.delete(codes);
     }
 
     @Transactional

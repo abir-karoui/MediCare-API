@@ -1,6 +1,10 @@
 package tn.exemple.medicare.entities.auth;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -40,18 +44,30 @@ public  class User implements Serializable , UserDetails , Principal {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+    @NotEmpty
     private String firstname;
+    @NotEmpty
     private String lastname;
     @Column(unique = true)
+    @Email( message = "Email is not formated")
+    @NotEmpty( message = "Email is not formated")
+    @NotBlank(message = "Email is not formated")
     private String email;
+    @NotEmpty
+    @Size(min =8 , message = "Password should be 8 characters long minimum")
     private String password;
+    @NotEmpty
     private String phone;
+    @NotEmpty
     private String address;
+
 
     private String photo;
     @Enumerated(EnumType.STRING)
+
     private TypeRole role;
     @Enumerated(EnumType.STRING)
+
     private TypeGender gender ;
 
     @JsonIgnore

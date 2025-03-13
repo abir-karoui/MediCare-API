@@ -27,8 +27,8 @@ public interface IUserSevices {
 
     void sendValidationEmail(User user) throws MessagingException;
 
-    void requestPasswordReset(String email);
-    void sendPasswordResetEmail(String email, String token);
+    void requestPasswordReset(String email) throws MessagingException;
+    void sendResetEmail(User user , String code) throws MessagingException;
     void resetPassword(String token, String newPassword);
 
     List<User> retrieveAllUsers();

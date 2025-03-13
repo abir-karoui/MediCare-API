@@ -34,25 +34,29 @@ public class UserController {
     private IUserSevices iUserSevices;
     @Autowired
     private UserDetailsServices userDetailsServices;
+    public record SignUpMessage(AuthenticationResponse user , String message) {}
 
     @PostMapping("/adduser")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public ResponseEntity<?> singUp(@RequestBody @Valid User u) throws MessagingException {
-        iUserSevices.singUp(u);
-        return  ResponseEntity.accepted().build();
+        AuthenticationResponse user = iUserSevices.singUp(u);
+        SignUpMessage message = new SignUpMessage(user, "An activation code has been sent to your email");
+        return ResponseEntity.accepted().body(message);
     }
+
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponse> login(@RequestBody @Valid AuthenticationRequest request) {
+    public ResponseEntity<?> login(@RequestBody @Valid AuthenticationRequest request) {
         return ResponseEntity.ok( iUserSevices.login(request));
     }
     @GetMapping("/activate-account")
-    public  void confirm(@RequestParam String code) throws MessagingException {
+    public  ResponseEntity<?> confirm(@RequestParam String code) throws MessagingException {
         iUserSevices.activateAccount(code);
+        return ResponseEntity.ok("Account successfully activated");
     }
     @PatchMapping("/changePassword")
     public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request , Principal connectedUser) {
         iUserSevices.changePassword(request , connectedUser);
-        return  ResponseEntity.accepted().build();
+        return  ResponseEntity.ok("Password successfully changed");
          }
 
     @PostMapping("/refresh-token")
@@ -60,16 +64,16 @@ public class UserController {
    iUserSevices.refreshToken(request , response) ;
     }
     @PostMapping("/forgot-password")
-    public ResponseEntity<String> forgotPassword(@RequestParam String email) {
+    public ResponseEntity<String> forgotPassword(@RequestParam String email) throws MessagingException {
         iUserSevices.requestPasswordReset(email);
-        return ResponseEntity.ok("A password reset link has been sent to your email");
+        return ResponseEntity.ok("A code to reset your password has been sent to your email");
     }
 
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(
-            @RequestParam String token,
+            @RequestParam String code,
             @RequestParam String newPassword) {
-        iUserSevices.resetPassword(token, newPassword);
+        iUserSevices.resetPassword(code, newPassword);
         return ResponseEntity.ok("Password successfully reset.");
     }
     @PostMapping("/logout")
