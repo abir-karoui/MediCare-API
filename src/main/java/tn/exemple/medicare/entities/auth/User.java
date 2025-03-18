@@ -153,11 +153,11 @@ public  class User implements Serializable , UserDetails , Principal {
     }
 
     @JsonIgnore
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user" , cascade = CascadeType.ALL, orphanRemoval = true)
     private  List<Codes> codes;
 
 
     @JsonIgnore
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user" , cascade = CascadeType.ALL, orphanRemoval = true)
     private  List<RefreshToken> refreshTokens;
 }

@@ -29,7 +29,9 @@ public interface IUserSevices {
 
     void requestPasswordReset(String email) throws MessagingException;
     void sendResetEmail(User user , String code) throws MessagingException;
-    void resetPassword(String token, String newPassword);
+    //void resetPassword(String token, String newPassword);
+    boolean verifyResetCode(String email, String code);
+    void resetPassword(String email, String code, String newPassword);
 
     List<User> retrieveAllUsers();
     Optional<User> getUserById(Long id);

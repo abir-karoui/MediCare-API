@@ -6,9 +6,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -83,12 +85,12 @@ public class UserServices implements IUserSevices {
     }
     public void sendValidationEmail(User user ) throws MessagingException {
         var newToken = generateAndSaveActivationCode(user);
-            emailService.sendEmail(
-                    user.getEmail(),
-                    user.getUsername(),
-                    newToken,
-                    "Account activation" ,
-                    TypeCode.ACTIVATION);
+        emailService.sendEmail(
+                user.getEmail(),
+                user.getUsername(),
+                newToken,
+                "Account activation" ,
+                TypeCode.ACTIVATION);
 
     }
     private String generateAndSaveActivationCode(User user ) {
@@ -136,7 +138,7 @@ public class UserServices implements IUserSevices {
 
     @Override
     public AuthenticationResponse login(AuthenticationRequest request) {
-        var auth = authenticationManager.authenticate(
+       try { var auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
         var claims = new HashMap<String, Object>();
@@ -147,58 +149,64 @@ public class UserServices implements IUserSevices {
 
         saveRefreshToken(user, refreshToken);
         return AuthenticationResponse.builder().accessToken(jwtToken).refreshToken(refreshToken).build();
+    } catch(BadCredentialsException e){
+           throw new RuntimeException("Email or password incorrect", e);
+       } catch (Exception e) {
+           throw new RuntimeException("Une erreur est survenue lors de l'authentification.");
+       }
     }
+
 
     @Override
     public void changePassword(ChangePasswordRequest request , Principal connectedUser) {
-         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
-    if (! passwordEncoder.matches(request.getCurrentPassword() , user.getPassword())){
-         throw new IllegalStateException("Wrong password");
+        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+        if (! passwordEncoder.matches(request.getCurrentPassword() , user.getPassword())){
+            throw new IllegalStateException("Wrong password");
+        }
+        if (!request.getNewPassword().equals(request.getConfirmationPassword())){
+            throw   new IllegalStateException("Password and confirmation do not match");
+        }
+        user.setPassword((passwordEncoder.encode(request.getNewPassword()))); //update
+        iUserRepository.save(user);
     }
-    if (!request.getNewPassword().equals(request.getConfirmationPassword())){
-        throw   new IllegalStateException("Password and confirmation do not match");
+    @Override
+    //Renouveler access token avec Refresh
+    public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        final String authHeader = request.getHeader(AUTHORIZATION);
+        final String refreshToken;
+        final String userEmail;
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return;
+        }
+
+        refreshToken = authHeader.substring(7); // "Bearer " a une longueur de 7
+        userEmail = jwtService.extractUsername(refreshToken);
+
+        if (userEmail != null) {
+            var userDetails = this.iUserRepository.findByEmail(userEmail).orElseThrow();
+            var storedRefreshToken = refreshTokenRepositroty.findByRefreshToken(refreshToken) //bch kifh user yabaath refreshToken bch yaamil access token jdid yet2aed mawjouf f database
+                    .orElseThrow(() -> new RuntimeException("Refresh token NOT FOUND"));
+
+            if (jwtService.isTokenValid(refreshToken, userDetails) && !storedRefreshToken.getExpiredAt().isBefore(Instant.now())) {
+                var accessToken = jwtService.generateToken(userDetails);
+                var authResponse = AuthenticationResponse.builder()
+                        .accessToken(accessToken)
+                        .refreshToken(refreshToken)
+                        .build();
+                new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
+            } else {
+                throw new RuntimeException("Invalid or expired refresh token");
+            }
+        }
     }
-    user.setPassword((passwordEncoder.encode(request.getNewPassword()))); //update
-    iUserRepository.save(user);
-    }
-   @Override
-   //Renouveler access token avec Refresh
-   public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
-       final String authHeader = request.getHeader(AUTHORIZATION);
-       final String refreshToken;
-       final String userEmail;
-
-       if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-           return;
-       }
-
-       refreshToken = authHeader.substring(7); // "Bearer " a une longueur de 7
-       userEmail = jwtService.extractUsername(refreshToken);
-
-       if (userEmail != null) {
-           var userDetails = this.iUserRepository.findByEmail(userEmail).orElseThrow();
-           var storedRefreshToken = refreshTokenRepositroty.findByRefreshToken(refreshToken) //bch kifh user yabaath refreshToken bch yaamil access token jdid yet2aed mawjouf f database
-                   .orElseThrow(() -> new RuntimeException("Refresh token NOT FOUND"));
-
-           if (jwtService.isTokenValid(refreshToken, userDetails) && !storedRefreshToken.getExpiredAt().isBefore(Instant.now())) {
-               var accessToken = jwtService.generateToken(userDetails);
-               var authResponse = AuthenticationResponse.builder()
-                       .accessToken(accessToken)
-                       .refreshToken(refreshToken)
-                       .build();
-               new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
-           } else {
-               throw new RuntimeException("Invalid or expired refresh token");
-           }
-       }
-   }
     private void saveRefreshToken(User user, String refreshToken) {
         var token = RefreshToken.builder()
                 .user(user)
                 .createdAt(Instant.now())
                 .refreshToken(refreshToken)
                 .expiredAt((Instant.now().plusMillis(jwtService.getRefreshTokenExpiration()))).build();
-                refreshTokenRepositroty.save(token);
+        refreshTokenRepositroty.save(token);
     }
 
 
@@ -226,6 +234,7 @@ public class UserServices implements IUserSevices {
         user.setId(id);
         return iUserRepository.save(user);
     }
+    @Transactional
     @Override
     public void deleteUserById(Long id) {
         if (!iUserRepository.existsById(id)) {
@@ -238,7 +247,6 @@ public class UserServices implements IUserSevices {
     public void deleteAllUser() {
         iUserRepository.deleteAll();
     }
-
 
     public void requestPasswordReset(String email) throws MessagingException { //hedhi bch nlawej user b mail w nabaath token ctt
         User user = iUserRepository.findByEmail(email)
@@ -265,7 +273,37 @@ public class UserServices implements IUserSevices {
 
     }
 
-    public void resetPassword(String code, String newPassword) {
+    public boolean verifyResetCode(String email, String code) {
+        User user = iUserRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User Not found"));
+
+        Codes codes = codeRepository.findByCodeAndUser(code, user)
+                .orElseThrow(() -> new RuntimeException("Invalid or expired code"));
+
+        if (codes.getExpiredAt().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("The token has expired");
+        }
+
+        return true;
+    }
+    public void resetPassword(String email, String code, String newPassword) {
+        User user = iUserRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User Not found"));
+
+        Codes codes = codeRepository.findByCodeAndUser(code, user)
+                .orElseThrow(() -> new RuntimeException("Invalid Token"));
+
+        if (codes.getExpiredAt().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("The token has expired");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        iUserRepository.save(user);
+        codeRepository.delete(codes);
+    }
+
+
+    /*public void resetPassword(String code, String newPassword) {
         Codes codes = codeRepository.findByCode(code)
                 .orElseThrow(() -> new RuntimeException("Invalid Token"));
         if (codes.getExpiredAt().isBefore(LocalDateTime.now())) {
@@ -275,7 +313,7 @@ public class UserServices implements IUserSevices {
         user.setPassword(passwordEncoder.encode(newPassword));
         iUserRepository.save(user);
         codeRepository.delete(codes);
-    }
+    }*/
 
     @Transactional
     public void logout(User user) {
@@ -283,4 +321,3 @@ public class UserServices implements IUserSevices {
     }
 
 }
-

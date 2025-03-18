@@ -3,17 +3,19 @@ package tn.exemple.medicare.controllers;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
 
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
     record ErrorBody(String problem) {
     }
@@ -41,18 +43,17 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
-        // Créer une map pour retourner les erreurs de validation
         Map<String, String> errors = new HashMap<>();
-
-        // Parcours des erreurs de validation
         ex.getBindingResult().getAllErrors().forEach(error -> {
             String fieldName = ((FieldError) error).getField();
             String message = error.getDefaultMessage();
             errors.put(fieldName, message);
         });
-
-        // Retourne les erreurs avec un status BAD_REQUEST
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorBody> handleBadCredentialsException(BadCredentialsException ex) {
+        return new ResponseEntity<>(new ErrorBody(ex.getMessage()), HttpStatus.UNAUTHORIZED);
     }
 
 

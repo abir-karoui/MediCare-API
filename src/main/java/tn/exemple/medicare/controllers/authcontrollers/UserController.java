@@ -61,21 +61,37 @@ public class UserController {
 
     @PostMapping("/refresh-token")
     public void refreshToken(HttpServletRequest request , HttpServletResponse response) throws IOException {
-   iUserSevices.refreshToken(request , response) ;
+    iUserSevices.refreshToken(request , response) ;
     }
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestParam String email) throws MessagingException {
         iUserSevices.requestPasswordReset(email);
         return ResponseEntity.ok("A code to reset your password has been sent to your email");
     }
-
+    @PostMapping("/verify-code")
+    public ResponseEntity<String> verifyResetCode(@RequestParam String email, @RequestParam String code) {
+        boolean isValid = iUserSevices.verifyResetCode(email, code);
+        return isValid ? ResponseEntity.ok("Code is valid") : ResponseEntity.badRequest().body("Invalid code");
+    }
     @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(
+            @RequestParam String email,
+            @RequestParam String code,
+            @RequestParam String newPassword) {
+        iUserSevices.resetPassword(email, code, newPassword);
+        return ResponseEntity.ok("Password successfully reset.");
+    }
+
+
+    /*@PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(
             @RequestParam String code,
             @RequestParam String newPassword) {
         iUserSevices.resetPassword(code, newPassword);
         return ResponseEntity.ok("Password successfully reset.");
-    }
+    }*/
+
+
     @PostMapping("/logout")
     public ResponseEntity<String> logout(@AuthenticationPrincipal User user) {
 
