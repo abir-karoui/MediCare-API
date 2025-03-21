@@ -6,8 +6,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -15,6 +13,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import tn.exemple.medicare.configs.JwtService;
 import tn.exemple.medicare.controllers.authcontrollers.AuthenticationRequest;
 import tn.exemple.medicare.controllers.authcontrollers.AuthenticationResponse;
@@ -23,6 +22,7 @@ import tn.exemple.medicare.entities.*;
 import tn.exemple.medicare.entities.auth.*;
 import tn.exemple.medicare.enums.TypeCode;
 import tn.exemple.medicare.enums.TypeRole;
+import tn.exemple.medicare.fileServer.FileUploadImpl;
 import tn.exemple.medicare.repositories.*;
 import tn.exemple.medicare.services.IUserSevices;
 
@@ -47,33 +47,32 @@ public class UserServices implements IUserSevices {
     private final CodeRepository codeRepository;
     private final EmailService emailService ;
     private final RefreshTokenRepositroty refreshTokenRepositroty;
-    private final PasswordResetTokenRepository passwordResetTokenRepository;
-    private final JavaMailSender mailSender;
-    private final IDiseasesRepository iDiseasesRepository ;
+    private final FileUploadImpl  fileUpload;
+
+    public AuthenticationResponse register(Map<String, Object> userMap, MultipartFile file) throws Exception
+    {
+
+        String roleStr = (String) userMap.get("role");
+        TypeRole role = TypeRole.valueOf(roleStr);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        User user = switch (role) {
+            case DOCTOR -> objectMapper.convertValue(userMap, Doctor.class);
+            case PATIENT -> objectMapper.convertValue(userMap, Patient.class);
+            default -> objectMapper.convertValue(userMap, User.class);
+        };
 
 
-
-    @Override
-
-    public AuthenticationResponse  singUp(User user) throws MessagingException {
-        Optional<User> existingUser = iUserRepository.findByEmail(user.getEmail());
-        if (existingUser.isPresent()) {
-            throw new IllegalArgumentException("Email already exists");
-        }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setAccountLocked(false);
         user.setEnabled(false);
-        User savedUser;
-        if (user.getRole() == TypeRole.DOCTOR) {
-            Doctor doctor = (Doctor) user;
-            savedUser = iUserRepository.save(doctor);
-        } else if (user.getRole() == TypeRole.PATIENT) {
-            Patient patient = (Patient) user;
-
-            savedUser = iUserRepository.save(patient);
+        if (file != null && !file.isEmpty()) {
+            String pictureUrl = fileUpload.uploadImage(file);
+            user.setPhoto(pictureUrl);
         } else {
-            throw new IllegalArgumentException("Invalid user role");
+            user.setPhoto(null);
         }
-
+        var savedUser = iUserRepository.save(user);
         var jwtToken = jwtService.generateToken(savedUser);
         var refreshToken = jwtService.generateRefreshToken(savedUser);
         saveRefreshToken(savedUser, refreshToken);
@@ -83,6 +82,7 @@ public class UserServices implements IUserSevices {
                 .refreshToken(refreshToken)
                 .build();
     }
+
     public void sendValidationEmail(User user ) throws MessagingException {
         var newToken = generateAndSaveActivationCode(user);
         emailService.sendEmail(
@@ -234,6 +234,9 @@ public class UserServices implements IUserSevices {
         user.setId(id);
         return iUserRepository.save(user);
     }
+
+
+
     @Transactional
     @Override
     public void deleteUserById(Long id) {
@@ -321,3 +324,38 @@ public class UserServices implements IUserSevices {
     }
 
 }
+
+
+
+
+/*@Override
+
+    public AuthenticationResponse  singUp(User user) throws MessagingException {
+        Optional<User> existingUser = iUserRepository.findByEmail(user.getEmail());
+        if (existingUser.isPresent()) {
+            throw new IllegalArgumentException("Email already exists");
+        }
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setEnabled(false);
+        User savedUser;
+        if (user.getRole() == TypeRole.DOCTOR) {
+            Doctor doctor = (Doctor) user;
+            savedUser = iUserRepository.save(doctor);
+        } else if (user.getRole() == TypeRole.PATIENT) {
+            Patient patient = (Patient) user;
+
+            savedUser = iUserRepository.save(patient);
+        } else {
+            throw new IllegalArgumentException("Invalid user role");
+        }
+
+        var jwtToken = jwtService.generateToken(savedUser);
+        var refreshToken = jwtService.generateRefreshToken(savedUser);
+        saveRefreshToken(savedUser, refreshToken);
+        sendValidationEmail(savedUser);
+        return AuthenticationResponse.builder()
+                .accessToken(jwtToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+*/

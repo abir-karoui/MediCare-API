@@ -10,22 +10,17 @@ import java.util.Set;
 
 
 
+@Getter
+@Setter
 @Entity
 @Data
 @Table(name = "Doctor")
 @AllArgsConstructor
 
 public class Doctor extends User {
-    String specialtiy ;
 
+    String specialty ;
 
-    public String getSpecialtiy() {
-        return specialtiy;
-    }
-
-    public void setSpecialtiy(String specialtiy) {
-        this.specialtiy = specialtiy;
-    }
 
     public  Doctor (){
         this.setRole(TypeRole.DOCTOR);

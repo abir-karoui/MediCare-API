@@ -31,11 +31,11 @@ import java.util.List;
 @Builder
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "users")
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "role")
+/*@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "role")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = Doctor.class, name = "DOCTOR"),
         @JsonSubTypes.Type(value = Patient.class, name = "PATIENT")
-})
+})*/
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
@@ -60,9 +60,9 @@ public  class User implements Serializable , UserDetails , Principal {
     private String phone;
     @NotEmpty
     private String address;
-
-
     private String photo;
+
+
     @Enumerated(EnumType.STRING)
 
     private TypeRole role;

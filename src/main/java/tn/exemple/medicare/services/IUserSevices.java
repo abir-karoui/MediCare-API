@@ -2,6 +2,7 @@ package tn.exemple.medicare.services;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.multipart.MultipartFile;
 import tn.exemple.medicare.controllers.authcontrollers.AuthenticationRequest;
 import tn.exemple.medicare.controllers.authcontrollers.AuthenticationResponse;
 import tn.exemple.medicare.controllers.authcontrollers.ChangePasswordRequest;
@@ -12,11 +13,14 @@ import tn.exemple.medicare.enums.TypeRole;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface IUserSevices {
 
-    AuthenticationResponse  singUp(User user) throws MessagingException;
+
+    AuthenticationResponse register(Map<String, Object> userMap, MultipartFile file) throws Exception;
+
     AuthenticationResponse login(AuthenticationRequest request);
 
     void changePassword(ChangePasswordRequest request , Principal connectedUser);

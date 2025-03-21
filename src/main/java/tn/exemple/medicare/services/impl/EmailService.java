@@ -50,31 +50,4 @@ public class EmailService {
 
           mailSender.send(mimeMessage);
      }
-
-    /* @Async
-     public void sendEmail(
-             String to,
-             String username,
-             String activationCode,
-             String subject
-     ) throws MessagingException {
-          MimeMessage mimeMessage = mailSender.createMimeMessage();
-          MimeMessageHelper helper = new MimeMessageHelper(
-                  mimeMessage,
-                  MimeMessageHelper.MULTIPART_MODE_MIXED,
-                  StandardCharsets.UTF_8.name()
-          );
-
-          String text = "Bonjour " + username + ",\n\n"
-                  + "Voici votre code d'activation : " + activationCode + "\n"
-                  + "Cordialement,\n"
-                  + "L'équipe de support";
-
-          helper.setFrom("abir.belkaroui@gmail.com");
-          helper.setTo(to);
-          helper.setSubject(subject);
-          helper.setText(text, false);
-
-          mailSender.send(mimeMessage);
-     }*/
 }

@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import tn.exemple.medicare.configs.JwtService;
 import tn.exemple.medicare.configs.UserDetailsServices;
 import tn.exemple.medicare.entities.auth.User;
@@ -20,7 +21,9 @@ import tn.exemple.medicare.services.IUserSevices;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/user")
@@ -37,12 +40,18 @@ public class UserController {
     public record SignUpMessage(AuthenticationResponse user , String message) {}
 
     @PostMapping("/adduser")
-    @ResponseStatus(HttpStatus.ACCEPTED)
-    public ResponseEntity<?> singUp(@RequestBody @Valid User u) throws MessagingException {
-        AuthenticationResponse user = iUserSevices.singUp(u);
+
+    public ResponseEntity<?> addUser(
+            @RequestParam(value = "photo", required = false) MultipartFile file,
+            @RequestParam @Valid Map<String, Object> userMap
+
+    ) throws Exception {
+        AuthenticationResponse user = iUserSevices.register(userMap , file);
         SignUpMessage message = new SignUpMessage(user, "An activation code has been sent to your email");
         return ResponseEntity.accepted().body(message);
     }
+
+
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid AuthenticationRequest request) {
@@ -126,9 +135,10 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
     @PutMapping("{id}")
-    User  UpdateUser(@PathVariable Long id, @RequestBody User user) {
+    User  UpdateUser(@PathVariable Long id, @RequestParam User user) {
         return iUserSevices.UpdateUser(id, user);
     }
+
     @DeleteMapping("{id}")
     public ResponseEntity<String> deleteUserById(@PathVariable Long id) {
         try {
