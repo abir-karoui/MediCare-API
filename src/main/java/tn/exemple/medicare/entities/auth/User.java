@@ -72,8 +72,14 @@ public  class User implements Serializable , UserDetails , Principal {
 
     @JsonIgnore
     private boolean accountLocked;
-    @JsonIgnore
+
     private boolean enabled ;
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+
 
 
     public boolean isAccountLocked() {
@@ -83,10 +89,7 @@ public  class User implements Serializable , UserDetails , Principal {
     public void setAccountLocked(boolean accountLocked) {
         this.accountLocked = accountLocked;
     }
-    @Override
-    public boolean isEnabled() {
-        return enabled;
-    }
+
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }

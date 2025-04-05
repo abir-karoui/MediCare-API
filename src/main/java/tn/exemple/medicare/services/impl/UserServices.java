@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +23,8 @@ import tn.exemple.medicare.entities.*;
 import tn.exemple.medicare.entities.auth.*;
 import tn.exemple.medicare.enums.TypeCode;
 import tn.exemple.medicare.enums.TypeRole;
+import tn.exemple.medicare.exceptions.BusinessErrorCode;
+import tn.exemple.medicare.exceptions.BusinessException;
 import tn.exemple.medicare.fileServer.FileUploadImpl;
 import tn.exemple.medicare.repositories.*;
 import tn.exemple.medicare.services.IUserSevices;
@@ -61,7 +64,9 @@ public class UserServices implements IUserSevices {
             case PATIENT -> objectMapper.convertValue(userMap, Patient.class);
             default -> objectMapper.convertValue(userMap, User.class);
         };
-
+        if (iUserRepository.existsByEmail(user.getEmail())) {
+            throw new BusinessException(BusinessErrorCode.EMAIL_ALREADY_EXISTS);
+        }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setAccountLocked(false);
@@ -118,42 +123,51 @@ public class UserServices implements IUserSevices {
     }
     @Override
     public void activateAccount(String code) throws MessagingException {
+        Codes savedCode = codeRepository.findByCode(code)
+                .orElseThrow(() -> new BusinessException(BusinessErrorCode.CODE_INCORRECT));
 
-        Codes savedCode = codeRepository.findByCode(code).orElseThrow(() -> new RuntimeException("Invalid Code"));
         if (savedCode.getTypecode() != TypeCode.ACTIVATION) {
-            throw new RuntimeException("Invalid activation code");
+            throw new BusinessException(BusinessErrorCode.CODE_Expired);
         }
-        if (LocalDateTime.now().isAfter(savedCode.getExpiredAt())){
+
+
+        if (LocalDateTime.now().isAfter(savedCode.getExpiredAt())) {
             sendValidationEmail(savedCode.getUser());
-            throw  new RuntimeException("Activation code has expired , Anew code has been send ");
+            throw new BusinessException(BusinessErrorCode.CODE_INCORRECT);
         }
+
         var user = iUserRepository.findById(savedCode.getUser().getId())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new BusinessException(BusinessErrorCode.NOT_FOUND));
+                //.orElseThrow(() -> new UsernameNotFoundException("User not found"));
         user.setEnabled(true);
         iUserRepository.save(user);
         savedCode.setValidateAt(LocalDateTime.now());
         codeRepository.save(savedCode);
     }
 
-
     @Override
     public AuthenticationResponse login(AuthenticationRequest request) {
-       try { var auth = authenticationManager.authenticate(
+        try { var auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
-        var claims = new HashMap<String, Object>();
-        var user = ((User)auth.getPrincipal());
-        claims.put("fullName" , user.fullName());
-        var jwtToken = jwtService.generateToken(claims , user);
-        var refreshToken = jwtService.generateRefreshToken(user);
+            var claims = new HashMap<String, Object>();
+            var user = ((User)auth.getPrincipal());
+            claims.put("fullName" , user.fullName());
+            var jwtToken = jwtService.generateToken(claims , user);
+            var refreshToken = jwtService.generateRefreshToken(user);
 
-        saveRefreshToken(user, refreshToken);
-        return AuthenticationResponse.builder().accessToken(jwtToken).refreshToken(refreshToken).build();
-    } catch(BadCredentialsException e){
-           throw new RuntimeException("Email or password incorrect", e);
-       } catch (Exception e) {
-           throw new RuntimeException("Une erreur est survenue lors de l'authentification.");
-       }
+            saveRefreshToken(user, refreshToken);
+            return AuthenticationResponse.builder().accessToken(jwtToken).refreshToken(refreshToken).build();
+        }  catch (BadCredentialsException e) {
+            throw e;
+        }
+        catch (DisabledException e) {
+            throw e;
+
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Une erreur est survenue lors de l'authentification.", e);
+        }
     }
 
 
@@ -161,10 +175,10 @@ public class UserServices implements IUserSevices {
     public void changePassword(ChangePasswordRequest request , Principal connectedUser) {
         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
         if (! passwordEncoder.matches(request.getCurrentPassword() , user.getPassword())){
-            throw new IllegalStateException("Wrong password");
+            throw new   BusinessException(BusinessErrorCode.INCORRECT_CURRENT_PASSWORD);
         }
         if (!request.getNewPassword().equals(request.getConfirmationPassword())){
-            throw   new IllegalStateException("Password and confirmation do not match");
+            throw    new BusinessException(BusinessErrorCode.NEW_PASSWORD_DOSES_NOT_MATCH);
         }
         user.setPassword((passwordEncoder.encode(request.getNewPassword()))); //update
         iUserRepository.save(user);
@@ -253,7 +267,7 @@ public class UserServices implements IUserSevices {
 
     public void requestPasswordReset(String email) throws MessagingException { //hedhi bch nlawej user b mail w nabaath token ctt
         User user = iUserRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User Not found"));
+                .orElseThrow(() -> new BusinessException(BusinessErrorCode.NOT_FOUND));
         String generateCode = generateCode(6);
         Codes codes = Codes.builder()
                 .code(generateCode)
@@ -278,32 +292,38 @@ public class UserServices implements IUserSevices {
 
     public boolean verifyResetCode(String email, String code) {
         User user = iUserRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User Not found"));
+                .orElseThrow(() -> new BusinessException(BusinessErrorCode.NOT_FOUND));
 
         Codes codes = codeRepository.findByCodeAndUser(code, user)
-                .orElseThrow(() -> new RuntimeException("Invalid or expired code"));
+                .orElseThrow(() -> new BusinessException(BusinessErrorCode.CODE_INCORRECT));
 
         if (codes.getExpiredAt().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("The token has expired");
+            throw new BusinessException(BusinessErrorCode.CODE_Expired);
         }
-
         return true;
     }
     public void resetPassword(String email, String code, String newPassword) {
         User user = iUserRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User Not found"));
+                .orElseThrow(() -> new BusinessException(BusinessErrorCode.NOT_FOUND));
 
         Codes codes = codeRepository.findByCodeAndUser(code, user)
-                .orElseThrow(() -> new RuntimeException("Invalid Token"));
+                .orElseThrow(() -> new  BusinessException(BusinessErrorCode.CODE_INCORRECT));
 
         if (codes.getExpiredAt().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("The token has expired");
+            throw new BusinessException(BusinessErrorCode.CODE_Expired);
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
         iUserRepository.save(user);
         codeRepository.delete(codes);
     }
+    @Transactional
+    public void logout(User user) {
+        refreshTokenRepositroty.deleteByUser(user);
+    }
+
+}
+
 
 
     /*public void resetPassword(String code, String newPassword) {
@@ -317,15 +337,6 @@ public class UserServices implements IUserSevices {
         iUserRepository.save(user);
         codeRepository.delete(codes);
     }*/
-
-    @Transactional
-    public void logout(User user) {
-        refreshTokenRepositroty.deleteByUser(user);
-    }
-
-}
-
-
 
 
 /*@Override

@@ -42,7 +42,7 @@ public class UserController {
     @PostMapping("/adduser")
 
     public ResponseEntity<?> addUser(
-            @RequestParam(value = "photo", required = false) MultipartFile file,
+            @RequestParam(value = "photo", required = false)  MultipartFile file,
             @RequestParam @Valid Map<String, Object> userMap
 
     ) throws Exception {

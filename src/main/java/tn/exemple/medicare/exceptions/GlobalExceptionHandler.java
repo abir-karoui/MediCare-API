@@ -20,8 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.ietf.jgss.GSSException.UNAUTHORIZED;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.*;
 import static tn.exemple.medicare.exceptions.BusinessErrorCode.*;
 
 
@@ -29,6 +28,103 @@ import static tn.exemple.medicare.exceptions.BusinessErrorCode.*;
 public class GlobalExceptionHandler {
     record ErrorBody(String problem) {
     }
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ExceptionResponse> handleBusinessException(BusinessException ex) {
+        BusinessErrorCode code = ex.getErrorCode();
+        ExceptionResponse response = ExceptionResponse.builder()
+                .businessErrorCode(code.getCode())
+                .businessErrorDescription(code.getDescription())
+                .error(code.getHttpStatus().getReasonPhrase())
+                .build();
+        return new ResponseEntity<>(response, code.getHttpStatus());
+    }
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ExceptionResponse> handleException(BadCredentialsException exp) {
+        var error = BusinessErrorCode.BAD_CREDENTIALS;
+
+        return ResponseEntity
+                .status(error.getHttpStatus())
+                .body(
+                        ExceptionResponse.builder()
+                                .businessErrorCode(error.getCode()) // ✅ Ton code métier
+                                .businessErrorDescription(error.getDescription())
+                                .error(error.getDescription())
+                                .build()
+                );
+    }
+
+
+    @ExceptionHandler(LockedException.class)
+    public ResponseEntity<ExceptionResponse> handleException(LockedException exp) {
+        return ResponseEntity
+                .status(UNAUTHORIZED)
+                .body(
+                        ExceptionResponse.builder()
+                                .businessErrorCode(ACCOUNT_LOCKED.getCode())
+                                .businessErrorDescription(ACCOUNT_LOCKED.getDescription())
+                                .error(exp.getMessage())
+                                .build()
+                );
+
+    }
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ExceptionResponse> handleException(DisabledException exp) {
+        var error = BusinessErrorCode.ACCOUNT_DISABLED;
+        return ResponseEntity
+                .status(error.getHttpStatus())
+                .body(
+                        ExceptionResponse.builder()
+                                .businessErrorCode(ACCOUNT_DISABLED.getCode())
+                                .businessErrorDescription(ACCOUNT_DISABLED.getDescription())
+                                .error(exp.getMessage())
+                                .build()
+                );
+
+    }
+    @ExceptionHandler(MessagingException.class)
+    public ResponseEntity<ExceptionResponse> handleException(MessagingException exp) {
+        return ResponseEntity
+                .status(INTERNAL_SERVER_ERROR)
+                .body(
+                        ExceptionResponse.builder()
+                                .error(exp.getMessage())
+                                .build()
+                );
+
+    }
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ExceptionResponse> handleException(MethodArgumentNotValidException exp) {
+        Set<String> errors = new HashSet<>();
+        exp.getBindingResult().getAllErrors()
+                .forEach(error -> {
+                    var errorMessage = error.getDefaultMessage();
+                    errors.add(errorMessage);
+                });
+        return ResponseEntity
+                .status(BAD_REQUEST)
+                .body(
+                        ExceptionResponse.builder()
+                                .validationErrors(errors)
+                                .build()
+                );
+
+    }
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ExceptionResponse> handleException(Exception exp) {
+        exp.printStackTrace();
+        return ResponseEntity
+                .status(INTERNAL_SERVER_ERROR)
+                .body(
+                        ExceptionResponse.builder()
+                                .businessErrorDescription(("INTERNAL ERROR , contact the admin"))
+                                .error(exp.getMessage())
+                                .build()
+                );
+
+    }
+
+
+    /*
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorBody> handleRuntimeException(final RuntimeException runtimeException) {
         return new ResponseEntity<>(new ErrorBody(runtimeException.getMessage()), INTERNAL_SERVER_ERROR);
@@ -61,95 +157,36 @@ public class GlobalExceptionHandler {
         });
         return new ResponseEntity<>(errors, BAD_REQUEST);
     }
-    @ExceptionHandler(BadCredentialsException.class)
+    /*@ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorBody> handleBadCredentialsException(BadCredentialsException ex) {
         return new ResponseEntity<>(new ErrorBody(ex.getMessage()), HttpStatus.UNAUTHORIZED);
     }
+   */
+
     /*
-    @ExceptionHandler(LockedException.class)
-    public ResponseEntity<ExceptionResponse> handleException(LockedException exp) {
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ExceptionResponse> handleBusinessException(BusinessException exp) {
+        var error = exp.getErrorCode();
+        String errorMessage = error.getDescription();
+
+        // Si c'est une erreur de compte non activé, afficher un message explicite
+        if (error == BusinessErrorCode.ACCOUNT_DISABLED) {
+            errorMessage = "Le compte n'est pas activé. Veuillez activer votre compte.";
+        }
+
         return ResponseEntity
-                .status(UNAUTHORIZED)
+                .status(error.getHttpStatus())
                 .body(
                         ExceptionResponse.builder()
-                                .businessErrorCode(ACCOUNT_LOCKED.getCode())
-                                .businessErrorDescription(ACCOUNT_LOCKED.getDescription())
-                                .error(exp.getMessage())
+                                .businessErrorCode(error.getCode())
+                                .businessErrorDescription(errorMessage)  // Message détaillé pour le compte désactivé
+                                .error(errorMessage)
                                 .build()
                 );
+    }*/
 
-    }
-    @ExceptionHandler(DisabledException.class)
-    public ResponseEntity<ExceptionResponse> handleException(DisabledException exp) {
-        return ResponseEntity
-                .status(UNAUTHORIZED)
-                .body(
-                        ExceptionResponse.builder()
-                                .businessErrorCode(ACCOUNT_DISABLED.getCode())
-                                .businessErrorDescription(ACCOUNT_DISABLED.getDescription())
-                                .error(exp.getMessage())
-                                .build()
-                );
 
-    }
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ExceptionResponse> handleException(BadCredentialsException exp) {
-        return ResponseEntity
-                .status(UNAUTHORIZED)
-                .body(
-                        ExceptionResponse.builder()
-                                .businessErrorCode(BAD_CREDENTIALS.getCode())
-                                .businessErrorDescription(BAD_CREDENTIALS.getDescription())
-                                .error(BAD_CREDENTIALS.getDescription())
-                                .build()
-                );
 
-    }
-
-    @ExceptionHandler(MessagingException.class)
-    public ResponseEntity<ExceptionResponse> handleException(MessagingException exp) {
-        return ResponseEntity
-                .status(INTERNAL_SERVER_ERROR)
-                .body(
-                        ExceptionResponse.builder()
-                                .error(exp.getMessage())
-                                .build()
-                );
-
-    }
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ExceptionResponse> handleException(MethodArgumentNotValidException exp) {
-        Set<String> errors = new HashSet<>();
-        exp.getBindingResult().getAllErrors()
-                .forEach(error -> {
-                    var errorMessage = error.getDefaultMessage();
-                    errors.add(errorMessage);
-                });
-        return ResponseEntity
-                .status(BAD_REQUEST)
-                .body(
-                        ExceptionResponse.builder()
-                                .validationErrors(errors)
-                                .build()
-                );
-
-    }
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ExceptionResponse> handleException(Exception exp) {
-        //log the exception
-        exp.printStackTrace();
-        return ResponseEntity
-                .status(INTERNAL_SERVER_ERROR)
-                .body(
-                        ExceptionResponse.builder()
-                                .businessErrorDescription(("INTERNAL ERROR , contact the admin"))
-                                .error(exp.getMessage())
-                                .build()
-                );
-
-    }
-
-*/
 
 
 
