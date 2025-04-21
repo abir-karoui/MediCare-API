@@ -14,6 +14,7 @@ import org.springframework.format.number.NumberFormatAnnotationFormatterFactory;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.format.support.FormattingConversionService;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.format.DateTimeFormatter;
 
@@ -25,6 +26,9 @@ public class MediCareApplication {
         SpringApplication.run(MediCareApplication.class, args);
     }
 
-
-
+   /* @Bean
+    public WebClient.Builder webClientBuilder() {
+        return WebClient.builder();
+    }
+*/
 }

@@ -153,8 +153,12 @@ public class UserServices implements IUserSevices {
             var claims = new HashMap<String, Object>();
             var user = ((User)auth.getPrincipal());
             claims.put("fullName" , user.fullName());
+            claims.put("userId", user.getId());
             var jwtToken = jwtService.generateToken(claims , user);
             var refreshToken = jwtService.generateRefreshToken(user);
+            Long extractedUserId = jwtService.extractUserId(jwtToken);
+            System.out.println("Extracted User ID from JWT: " + extractedUserId);
+
 
             saveRefreshToken(user, refreshToken);
             return AuthenticationResponse.builder().accessToken(jwtToken).refreshToken(refreshToken).build();
@@ -203,6 +207,8 @@ public class UserServices implements IUserSevices {
                     .orElseThrow(() -> new RuntimeException("Refresh token NOT FOUND"));
 
             if (jwtService.isTokenValid(refreshToken, userDetails) && !storedRefreshToken.getExpiredAt().isBefore(Instant.now())) {
+                HashMap<String, Object> extraClaims = new HashMap<>();
+                extraClaims.put("userId", userDetails.getId());
                 var accessToken = jwtService.generateToken(userDetails);
                 var authResponse = AuthenticationResponse.builder()
                         .accessToken(accessToken)
@@ -246,7 +252,7 @@ public class UserServices implements IUserSevices {
             throw new EntityNotFoundException("User with Id: '" +id + "' not found");
         }
         user.setId(id);
-        return iUserRepository.save(user);
+        return iUserRepository.save(user) ;
     }
 
 

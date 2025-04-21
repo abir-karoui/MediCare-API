@@ -11,8 +11,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import tn.exemple.medicare.entities.Doctor;
-import tn.exemple.medicare.entities.Patient;
+import tn.exemple.medicare.entities.prescription.Prescription;
 import tn.exemple.medicare.enums.TypeGender;
 import tn.exemple.medicare.enums.TypeRole;
 
@@ -31,11 +30,6 @@ import java.util.List;
 @Builder
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "users")
-/*@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "role")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = Doctor.class, name = "DOCTOR"),
-        @JsonSubTypes.Type(value = Patient.class, name = "PATIENT")
-})*/
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
@@ -163,4 +157,11 @@ public  class User implements Serializable , UserDetails , Principal {
     @JsonIgnore
     @OneToMany(mappedBy = "user" , cascade = CascadeType.ALL, orphanRemoval = true)
     private  List<RefreshToken> refreshTokens;
+
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Prescription> prescriptions;
+
+
 }

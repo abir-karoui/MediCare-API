@@ -2,9 +2,6 @@ package tn.exemple.medicare.services;
 
 import org.springframework.data.domain.Page;
 import tn.exemple.medicare.entities.Diseases;
-import tn.exemple.medicare.entities.Medication;
-
-import java.util.List;
 
 public interface IDiseases {
     Diseases addDiseases(Diseases diseases) ;

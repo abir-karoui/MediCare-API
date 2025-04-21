@@ -8,10 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.exemple.medicare.entities.Diseases;
-import tn.exemple.medicare.entities.Medication;
 import tn.exemple.medicare.services.IDiseases;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/diseases")

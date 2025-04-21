@@ -10,6 +10,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import tn.exemple.medicare.entities.auth.User;
 
 import java.security.Key;
 import java.util.Date;
@@ -45,14 +46,25 @@ public class JwtService { // service responsable a gener tokne , decode , extrac
                 .parseClaimsJws(token)
                 .getBody();
     }
-    public  String generateToken(UserDetails userDetails){
+    /*public  String generateToken(UserDetails userDetails){
+
         return  generateToken(new HashMap<>(), userDetails);
     }
 
     public String generateToken(HashMap<String,Object> claims, UserDetails userDetails) {
 
         return buildToken(claims, userDetails , jwtExpiration);
+    }*/
+    public String generateToken(UserDetails userDetails) {
+        HashMap<String, Object> claims = new HashMap<>();
+        claims.put("userId", ((User) userDetails).getId());
+        return generateToken(claims, userDetails);
     }
+
+    public String generateToken(HashMap<String, Object> claims, UserDetails userDetails) {
+        return buildToken(claims, userDetails, jwtExpiration);
+    }
+
     public String generateRefreshToken(UserDetails userDetails) {
 
         return buildToken(new HashMap<>(), userDetails ,refreshExpiration);
@@ -68,6 +80,7 @@ public class JwtService { // service responsable a gener tokne , decode , extrac
                 .stream() //list
                 .map(GrantedAuthority::getAuthority)
                 .toList();
+
            return Jwts
                    .builder().setClaims(extraClaims)
                    .setSubject(userDetails.getUsername())
@@ -89,6 +102,9 @@ public class JwtService { // service responsable a gener tokne , decode , extrac
 
     private Date extractExpiration(String token) {
         return  extractClaim(token, Claims ::getExpiration);
+    }
+    public Long extractUserId(String token) {
+        return extractClaim(token, claims -> claims.get("userId", Long.class));
     }
 
 

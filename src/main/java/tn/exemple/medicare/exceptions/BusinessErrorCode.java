@@ -16,8 +16,8 @@ public enum BusinessErrorCode {
     ACCOUNT_DISABLED(1003, FORBIDDEN, "User account is disabled"),
     BAD_CREDENTIALS(1004, FORBIDDEN, "Email or password is incorrect"),
     EMAIL_ALREADY_EXISTS(1005, CONFLICT, "Email address is already registered"),
-    CODE_Expired(3001, BAD_REQUEST, "Activation code has expired" ),
-    CODE_INCORRECT(3002, BAD_REQUEST, "Code incorrect" ),
+    CODE_Expired(3001, BAD_REQUEST, "Code has expired. Please request a new one" ),
+    CODE_INCORRECT(3002, BAD_REQUEST, "Incorrect code, please verify your code" ),
 
     ;
     @Getter
