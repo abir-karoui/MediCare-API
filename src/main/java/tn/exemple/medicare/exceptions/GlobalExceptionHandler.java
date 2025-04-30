@@ -1,5 +1,6 @@
 package tn.exemple.medicare.exceptions;
 
+import com.google.firebase.messaging.FirebaseMessagingException;
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -28,6 +29,7 @@ import static tn.exemple.medicare.exceptions.BusinessErrorCode.*;
 public class GlobalExceptionHandler {
     record ErrorBody(String problem) {
     }
+
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ExceptionResponse> handleBusinessException(BusinessException ex) {
         BusinessErrorCode code = ex.getErrorCode();

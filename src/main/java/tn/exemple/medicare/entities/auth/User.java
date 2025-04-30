@@ -58,7 +58,6 @@ public  class User implements Serializable , UserDetails , Principal {
 
 
     @Enumerated(EnumType.STRING)
-
     private TypeRole role;
     @Enumerated(EnumType.STRING)
 
@@ -68,6 +67,8 @@ public  class User implements Serializable , UserDetails , Principal {
     private boolean accountLocked;
 
     private boolean enabled ;
+
+    private String fcmToken;
     @Override
     public boolean isEnabled() {
         return enabled;

@@ -43,7 +43,6 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers( "/user/adduser", "/user/login" , "/user/activate-account" , "/user/forgot-password" , "/user/reset-password", "/user/logout" , "/user/verify-code" , "/medication/search","/medication/pagination")
-                               //, "/medication/search"
                                 .permitAll() //je donne acce ken l login w signIn si nn ay requette lezem deja ykoun connceter auth/** tous les api qui concernet l'authentification
                                 .anyRequest()
                                 .authenticated())

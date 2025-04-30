@@ -30,5 +30,5 @@ public class Dose {
     @JoinColumn(name = "prescription_id")
 
     private Prescription prescription;
-
+    private boolean notified = false;
 }

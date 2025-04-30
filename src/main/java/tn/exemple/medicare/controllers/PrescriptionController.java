@@ -39,7 +39,6 @@ public class PrescriptionController {
     public ResponseEntity<Prescription> updatePrescriptionPartial(
             @PathVariable Long id,
             @RequestBody PrescriptionDto prescriptionDto) {
-
         Prescription updatedPrescription = prescriptionServices.updatePrescriptionPartial(id, prescriptionDto);
         return ResponseEntity.ok(updatedPrescription);
     }

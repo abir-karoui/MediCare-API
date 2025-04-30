@@ -17,7 +17,7 @@ import tn.exemple.medicare.repositories.IPrescriptionRepository;
 import tn.exemple.medicare.repositories.IUserRepository;
 import tn.exemple.medicare.services.IPrescriptionServices;
 
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +31,7 @@ public class PrescriptionServices implements IPrescriptionServices {
     private final IMedicationRepository iMedicationRepository;
     private  final PrescriptionMapper prescriptionMapper;
     private  final AuthService authService;
+
     public Prescription createPrescription(PrescriptionDto prescriptionDto) {
 
         Long userId = authService.getAuthenticatedUserId();
@@ -112,38 +113,61 @@ public class PrescriptionServices implements IPrescriptionServices {
 
         iPrescriptionRepository.delete(prescription);
     }
+
     @Override
     public Prescription updatePrescriptionPartial(Long prescriptionId, PrescriptionDto prescriptionDto) {
         Prescription existingPrescription = iPrescriptionRepository.findById(prescriptionId)
                 .orElseThrow(() -> new EntityNotFoundException("Prescription with Id: '" + prescriptionId + "' not found"));
+
         Long userId = authService.getAuthenticatedUserId();
         User user = iUserRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User with ID: " + userId + " not found"));
+
         if (prescriptionDto.getDurationDays() != 0) {
             existingPrescription.setDurationDays(prescriptionDto.getDurationDays());
         }
+
         if (prescriptionDto.getStockActuel() != null) {
             existingPrescription.setStockActuel(prescriptionDto.getStockActuel());
         }
+
         if (prescriptionDto.getMedication() != null && prescriptionDto.getMedication().getDenomination() != null) {
-            Medication medication = iMedicationRepository.findByDenomination(prescriptionDto.getMedication().getDenomination());
-            if (medication == null) {
-                medication = new Medication();
-                medication.setDenomination(prescriptionDto.getMedication().getDenomination());
-                medication = iMedicationRepository.save(medication);
-            }
+            String denomination = prescriptionDto.getMedication().getDenomination();
+            Optional<Medication> medicationOpt = iMedicationRepository.findOneByDenomination(denomination);
+
+            Medication medication = medicationOpt.orElseGet(() -> {
+                Medication newMed = new Medication();
+                newMed.setDenomination(denomination);
+                return iMedicationRepository.save(newMed);
+            });
+
             existingPrescription.setMedication(medication);
         }
+
         if (prescriptionDto.getDoses() != null) {
-            existingPrescription.getDoses().clear();
-            prescriptionDto.getDoses().forEach(doseDto -> {
-                Dose dose = new Dose();
-                dose.setTimeToTake(doseDto.getTimeToTake());
-                dose.setQuantity(doseDto.getQuantity());
-                dose.setPrescription(existingPrescription);
-                existingPrescription.getDoses().add(dose);
-            });
+            List<Dose> existingDoses = existingPrescription.getDoses();
+            List<PrescriptionDto.DoseDto> newDoses = prescriptionDto.getDoses();
+            while (existingDoses.size() < newDoses.size()) {
+                Dose newDose = new Dose();
+                newDose.setPrescription(existingPrescription);
+                //newDose.setNotified(false);
+                existingDoses.add(newDose);
+            }
+
+            while (existingDoses.size() > newDoses.size()) {
+                existingDoses.remove(existingDoses.size() - 1);
+            }
+
+            for (int i = 0; i < newDoses.size(); i++) {
+                PrescriptionDto.DoseDto doseDto = newDoses.get(i);
+                Dose existingDose = existingDoses.get(i);
+                existingDose.setTimeToTake(doseDto.getTimeToTake());
+                existingDose.setQuantity(doseDto.getQuantity());
+                existingDose.setNotified(false);
+            }
         }
         return iPrescriptionRepository.save(existingPrescription);
     }
+
+
 }

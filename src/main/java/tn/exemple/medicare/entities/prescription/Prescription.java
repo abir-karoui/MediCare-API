@@ -6,10 +6,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
 import tn.exemple.medicare.entities.auth.User;
 import tn.exemple.medicare.entities.prescription.Dose;
 import tn.exemple.medicare.entities.prescription.Medication;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @AllArgsConstructor
@@ -36,6 +40,14 @@ public class Prescription {
     @JsonBackReference
     @JoinColumn(name = "user_id")
     private User user;
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    public boolean isActive() {
+        return ChronoUnit.DAYS.between(createdAt.toLocalDate(), LocalDate.now()) <= durationDays;
+    }
+
 
 
 }
