@@ -7,6 +7,7 @@ import tn.exemple.medicare.controllers.authcontrollers.AuthenticationRequest;
 import tn.exemple.medicare.controllers.authcontrollers.AuthenticationResponse;
 import tn.exemple.medicare.controllers.authcontrollers.ChangePasswordRequest;
 import tn.exemple.medicare.entities.auth.User;
+import tn.exemple.medicare.entities.dto.UserDto;
 import tn.exemple.medicare.enums.TypeCode;
 import tn.exemple.medicare.enums.TypeRole;
 
@@ -39,7 +40,7 @@ public interface IUserSevices {
 
     List<User> retrieveAllUsers();
     Optional<User> getUserById(Long id);
-    List<User> getUsersByRole(TypeRole role);
+    List<UserDto> getUsersByRole();
     User UpdateUser(Long id , User user) ;
     void  deleteUserById(Long id);
     void deleteAllUser();

@@ -15,17 +15,20 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import tn.exemple.medicare.configs.AuthService;
 import tn.exemple.medicare.configs.JwtService;
 import tn.exemple.medicare.controllers.authcontrollers.AuthenticationRequest;
 import tn.exemple.medicare.controllers.authcontrollers.AuthenticationResponse;
 import tn.exemple.medicare.controllers.authcontrollers.ChangePasswordRequest;
 import tn.exemple.medicare.entities.*;
 import tn.exemple.medicare.entities.auth.*;
+import tn.exemple.medicare.entities.dto.UserDto;
 import tn.exemple.medicare.enums.TypeCode;
 import tn.exemple.medicare.enums.TypeRole;
 import tn.exemple.medicare.exceptions.BusinessErrorCode;
 import tn.exemple.medicare.exceptions.BusinessException;
 import tn.exemple.medicare.fileServer.FileUploadImpl;
+import tn.exemple.medicare.mappers.UserMapper;
 import tn.exemple.medicare.repositories.*;
 import tn.exemple.medicare.services.IUserSevices;
 
@@ -35,6 +38,7 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
@@ -51,6 +55,7 @@ public class UserServices implements IUserSevices {
     private final EmailService emailService ;
     private final RefreshTokenRepositroty refreshTokenRepositroty;
     private final FileUploadImpl  fileUpload;
+    private  final AuthService authService;
 
     public AuthenticationResponse register(Map<String, Object> userMap, MultipartFile file) throws Exception
     {
@@ -242,10 +247,40 @@ public class UserServices implements IUserSevices {
     }
 
     @Override
-    public List<User> getUsersByRole(TypeRole role) {
+   /* public List<User> getUsersByRole(TypeRole role) {
         return  iUserRepository.findAllByRole(role);
-    }
+    }*/
 
+    /*public List<User> getUsersByRole() {
+        TypeRole role = authService.getAuthenticatedUserRole();
+      if(role == TypeRole.DOCTOR){
+          return iUserRepository.findAllByRole(TypeRole.PATIENT);
+      } else if (role == TypeRole.PATIENT) {
+
+          return iUserRepository.findAllByRole(TypeRole.DOCTOR);
+
+      }
+
+        return  List.of();
+    }
+*/
+    public List<UserDto> getUsersByRole() {
+        TypeRole role = authService.getAuthenticatedUserRole();
+
+        List<User> users;
+
+        if (role == TypeRole.DOCTOR) {
+            users = iUserRepository.findAllByRole(TypeRole.PATIENT);
+        } else if (role == TypeRole.PATIENT) {
+            users = iUserRepository.findAllByRole(TypeRole.DOCTOR);
+        } else {
+            return List.of();
+        }
+
+        return users.stream()
+                .map(UserMapper::toDto)
+                .collect(Collectors.toList());
+    }
     @Override
     public User UpdateUser(Long id, User user) {
         if (!iUserRepository.existsById(id)) {

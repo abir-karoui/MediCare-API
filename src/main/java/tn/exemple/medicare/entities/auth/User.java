@@ -67,6 +67,7 @@ public  class User implements Serializable , UserDetails , Principal {
     private boolean accountLocked;
 
     private boolean enabled ;
+    @JsonIgnore
 
     private String fcmToken;
     @Override
@@ -159,7 +160,7 @@ public  class User implements Serializable , UserDetails , Principal {
     @OneToMany(mappedBy = "user" , cascade = CascadeType.ALL, orphanRemoval = true)
     private  List<RefreshToken> refreshTokens;
 
-
+    @JsonIgnore
     @JsonManagedReference
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Prescription> prescriptions;

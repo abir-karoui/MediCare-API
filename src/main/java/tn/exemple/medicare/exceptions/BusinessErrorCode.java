@@ -18,6 +18,8 @@ public enum BusinessErrorCode {
     EMAIL_ALREADY_EXISTS(1005, CONFLICT, "Email address is already registered"),
     CODE_Expired(3001, BAD_REQUEST, "Code has expired. Please request a new one" ),
     CODE_INCORRECT(3002, BAD_REQUEST, "Incorrect code, please verify your code" ),
+    INVITATION_ALREADY_SENT(4000, CONFLICT, "Invitation has already been sent to this user");
+
 
     ;
     @Getter

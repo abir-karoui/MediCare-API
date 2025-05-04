@@ -1,4 +1,5 @@
 package tn.exemple.medicare.entities;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,12 +23,14 @@ public class Patient extends User {
     public Patient(){
             this.setRole(TypeRole.PATIENT);
         }
+    @JsonIgnore
     @ManyToMany
     @JoinTable(
             name = "patient_doctor",
             joinColumns = @JoinColumn(name = "idPatient"),
             inverseJoinColumns = @JoinColumn(name = "idDoctor"))
     Set<Doctor> doctors;
+    @JsonIgnore
 
     @ManyToMany
     @JoinTable(

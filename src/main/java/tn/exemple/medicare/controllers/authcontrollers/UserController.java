@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import tn.exemple.medicare.configs.JwtService;
 import tn.exemple.medicare.configs.UserDetailsServices;
 import tn.exemple.medicare.entities.auth.User;
+import tn.exemple.medicare.entities.dto.UserDto;
 import tn.exemple.medicare.enums.TypeRole;
 import tn.exemple.medicare.services.IUserSevices;
 
@@ -126,11 +127,11 @@ public class UserController {
 
         return ResponseEntity.ok(foundUser);
     }
-    @GetMapping("/role/{role}")
-    public ResponseEntity<List<User>> getUsersByRole(@PathVariable("role") TypeRole role) {
-        List<User> users = iUserSevices.getUsersByRole(role);
+    @GetMapping("/list/role")
+    public ResponseEntity<List<UserDto>> getUsersByRole() {
+        List<UserDto> users = iUserSevices.getUsersByRole();
         if (users.isEmpty()) {
-            throw new EntityNotFoundException("No users found with role: " + role);
+            throw new EntityNotFoundException("Empty List" );
         }
         return ResponseEntity.ok(users);
     }
