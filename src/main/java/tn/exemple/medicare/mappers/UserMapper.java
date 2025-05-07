@@ -13,6 +13,7 @@ public class UserMapper {
         if (user == null) return null;
 
         UserDto dto = new UserDto();
+        dto.setId(user.getId());
         dto.setFirstname(user.getFirstname());
         dto.setLastname(user.getLastname());
         dto.setEmail(user.getEmail());
@@ -39,6 +40,7 @@ public class UserMapper {
         if (dto == null) return null;
 
         User user = new User();
+        user.setId(dto.getId());
         user.setFirstname(dto.getFirstname());
         user.setLastname(dto.getLastname());
         user.setEmail(dto.getEmail());

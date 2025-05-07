@@ -7,7 +7,7 @@ import java.util.Optional;
 public interface IInvitation {
     Invitation sendInvitation(Long receiverId);
     Invitation acceptInvitation(Long invitationId);
-    Invitation rejectInvitation(Long invitationId);
+     void rejectInvitation(Long invitationId) ;
     Optional<Invitation> getInvitationStatus(Long otherUserId);
 
 }

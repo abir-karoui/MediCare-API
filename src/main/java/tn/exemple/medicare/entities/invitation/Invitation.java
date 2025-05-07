@@ -34,7 +34,7 @@ public class Invitation {
     private TypeRole receiverType;
 
     @Enumerated(EnumType.STRING)
-    private InvitationStatus status = InvitationStatus.PENDING;
+    private InvitationStatus status ;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 

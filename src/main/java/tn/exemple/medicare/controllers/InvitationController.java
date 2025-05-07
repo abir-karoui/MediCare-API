@@ -25,9 +25,10 @@ public class InvitationController {
         return ResponseEntity.ok(invitationService.acceptInvitation(id));
     }
 
-    @PostMapping("/{id}/reject")
-    public ResponseEntity<Invitation> rejectInvitation(@PathVariable Long id) {
-        return ResponseEntity.ok(invitationService.rejectInvitation(id));
+    @DeleteMapping("/{id}/reject")
+    public ResponseEntity<Void> rejectInvitation(@PathVariable Long id) {
+        invitationService.rejectInvitation(id);
+        return ResponseEntity.noContent().build(); // HTTP 204
     }
     @GetMapping("/status/{otherUserId}")
     public ResponseEntity<?> getInvitationStatus(@PathVariable Long otherUserId) {

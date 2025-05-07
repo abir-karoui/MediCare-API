@@ -69,12 +69,9 @@ public class InvitationServices implements IInvitation {
         return invitationRepository.save(invitation);
     }
     @Override
-    public Invitation rejectInvitation(Long invitationId) {
+    public void rejectInvitation(Long invitationId) {
         Invitation invitation = getInvitationById(invitationId);
-        checkIfReceiver(invitation);
-
-        invitation.setStatus(InvitationStatus.REJECTED);
-        return invitationRepository.save(invitation);
+        invitationRepository.delete(invitation);
     }
     private Invitation getInvitationById(Long id) {
         return invitationRepository.findById(id)
