@@ -1,5 +1,5 @@
 package tn.exemple.medicare.enums;
 
 public enum TypeRole {
-    DOCTOR , PATIENT
+    DOCTOR , PATIENT ,ADMIN
 }

@@ -10,6 +10,7 @@ import tn.exemple.medicare.entities.notification.Notification;
 import tn.exemple.medicare.entities.notification.NotificationRequest;
 import tn.exemple.medicare.entities.auth.User;
 import tn.exemple.medicare.entities.prescription.Dose;
+import tn.exemple.medicare.enums.NotificationType;
 import tn.exemple.medicare.repositories.IDoseRepository;
 import tn.exemple.medicare.repositories.NotificationRepository;
 import tn.exemple.medicare.services.impl.FCMService;
@@ -65,6 +66,7 @@ public class MedicationReminderScheduler {
                     .body(body)
                     .sentAt(LocalDateTime.now())
                     .user(patient)
+                    .type(NotificationType.REMINDER)
                     .prescription(dose.getPrescription())
                     .build();
 
@@ -72,6 +74,5 @@ public class MedicationReminderScheduler {
         } catch (Exception e) {
             logger.error("Échec d'envoi de notification pour la dose ID: " + dose.getId(), e);
         }
-
     }
 }

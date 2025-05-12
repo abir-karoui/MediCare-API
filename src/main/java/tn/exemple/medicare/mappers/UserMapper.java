@@ -23,8 +23,8 @@ public class UserMapper {
         dto.setRole(user.getRole());
         dto.setGender(user.getGender());
         if (user instanceof Doctor doctor) {
-            if (doctor.getSpecialty() != null) {
-                dto.setSpeciality(doctor.getSpecialty());
+            if (doctor.getSpeciality() != null) {
+                dto.setSpeciality(doctor.getSpeciality());
             }
         }
 

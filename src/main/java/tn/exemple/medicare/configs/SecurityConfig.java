@@ -44,6 +44,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers( "/user/adduser", "/user/login" , "/user/activate-account" , "/user/forgot-password" , "/user/reset-password", "/user/logout" , "/user/verify-code" , "/medication/search","/medication/pagination")
                                 .permitAll() //je donne acce ken l login w signIn si nn ay requette lezem deja ykoun connceter auth/** tous les api qui concernet l'authentification
+                                .requestMatchers("/admin/**").hasAuthority("ADMIN")
                                 .anyRequest()
                                 .authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))

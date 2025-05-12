@@ -57,18 +57,21 @@ public class UserServices implements IUserSevices {
     private final FileUploadImpl  fileUpload;
     private  final AuthService authService;
 
-    public AuthenticationResponse register(Map<String, Object> userMap, MultipartFile file) throws Exception
+    public AuthenticationResponse register(Map<String, Object> userMap, MultipartFile photo, MultipartFile medicalCard) throws Exception
     {
 
         String roleStr = (String) userMap.get("role");
         TypeRole role = TypeRole.valueOf(roleStr);
 
         ObjectMapper objectMapper = new ObjectMapper();
-        User user = switch (role) {
-            case DOCTOR -> objectMapper.convertValue(userMap, Doctor.class);
-            case PATIENT -> objectMapper.convertValue(userMap, Patient.class);
-            default -> objectMapper.convertValue(userMap, User.class);
-        };
+        User user;
+        if (role == TypeRole.DOCTOR) {
+            user = objectMapper.convertValue(userMap, Doctor.class);
+        } else if (role == TypeRole.PATIENT) {
+            user = objectMapper.convertValue(userMap, Patient.class);
+        } else {
+            user = objectMapper.convertValue(userMap, User.class);
+        }
         if (iUserRepository.existsByEmail(user.getEmail())) {
             throw new BusinessException(BusinessErrorCode.EMAIL_ALREADY_EXISTS);
         }
@@ -76,12 +79,12 @@ public class UserServices implements IUserSevices {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setAccountLocked(false);
         user.setEnabled(false);
-        if (file != null && !file.isEmpty()) {
-            String pictureUrl = fileUpload.uploadImage(file);
-            user.setPhoto(pictureUrl);
-        } else {
-            user.setPhoto(null);
+        user.setPhoto(photo != null && !photo.isEmpty() ? fileUpload.uploadImage(photo) : null);
+
+        if (user instanceof Doctor doctor) {
+            doctor.setMedicalCard(medicalCard != null && !medicalCard.isEmpty() ? fileUpload.uploadImage(medicalCard) : null);
         }
+
         var savedUser = iUserRepository.save(user);
         var jwtToken = jwtService.generateToken(savedUser);
         var refreshToken = jwtService.generateRefreshToken(savedUser);
@@ -135,7 +138,6 @@ public class UserServices implements IUserSevices {
             throw new BusinessException(BusinessErrorCode.CODE_Expired);
         }
 
-
         if (LocalDateTime.now().isAfter(savedCode.getExpiredAt())) {
             sendValidationEmail(savedCode.getUser());
             throw new BusinessException(BusinessErrorCode.CODE_INCORRECT);
@@ -143,7 +145,6 @@ public class UserServices implements IUserSevices {
 
         var user = iUserRepository.findById(savedCode.getUser().getId())
                 .orElseThrow(() -> new BusinessException(BusinessErrorCode.NOT_FOUND));
-                //.orElseThrow(() -> new UsernameNotFoundException("User not found"));
         user.setEnabled(true);
         iUserRepository.save(user);
         savedCode.setValidateAt(LocalDateTime.now());
@@ -172,7 +173,6 @@ public class UserServices implements IUserSevices {
         }
         catch (DisabledException e) {
             throw e;
-
         }
         catch (Exception e) {
             throw new RuntimeException("Une erreur est survenue lors de l'authentification.", e);
@@ -246,7 +246,7 @@ public class UserServices implements IUserSevices {
         return iUserRepository.findById(id);
     }
 
-    @Override
+
    /* public List<User> getUsersByRole(TypeRole role) {
         return  iUserRepository.findAllByRole(role);
     }*/
@@ -263,7 +263,9 @@ public class UserServices implements IUserSevices {
 
         return  List.of();
     }
+
 */
+    @Override
     public List<UserDto> getUsersByRole() {
         TypeRole role = authService.getAuthenticatedUserRole();
 

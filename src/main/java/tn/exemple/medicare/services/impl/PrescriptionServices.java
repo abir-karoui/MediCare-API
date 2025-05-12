@@ -110,7 +110,6 @@ public class PrescriptionServices implements IPrescriptionServices {
         if (prescription.getDoses() != null && !prescription.getDoses().isEmpty()) {
             iDoseRepository.deleteAll(prescription.getDoses());
         }
-
         iPrescriptionRepository.delete(prescription);
     }
 

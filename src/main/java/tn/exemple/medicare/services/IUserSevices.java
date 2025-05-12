@@ -20,7 +20,7 @@ import java.util.Optional;
 public interface IUserSevices {
 
 
-    AuthenticationResponse register(Map<String, Object> userMap, MultipartFile file) throws Exception;
+    AuthenticationResponse register(Map<String, Object> userMap, MultipartFile photo, MultipartFile medicalCard) throws Exception;
 
     AuthenticationResponse login(AuthenticationRequest request);
 

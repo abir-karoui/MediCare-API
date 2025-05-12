@@ -12,7 +12,8 @@ import tn.exemple.medicare.configs.AuthService;
 import tn.exemple.medicare.entities.auth.User;
 import tn.exemple.medicare.entities.dto.FcmTokenRequest;
 import tn.exemple.medicare.entities.notification.Notification;
-import tn.exemple.medicare.entities.prescription.Prescription;
+import tn.exemple.medicare.entities.notification.NotificationResponse;
+import tn.exemple.medicare.mappers.NotificationMapper;
 import tn.exemple.medicare.repositories.IUserRepository;
 import tn.exemple.medicare.repositories.NotificationRepository;
 import tn.exemple.medicare.services.INotificationServices;
@@ -25,6 +26,7 @@ public class NotificationServices  implements INotificationServices {
     private final IUserRepository userRepository;
     private  final AuthService authService;
     private  final NotificationRepository notificationRepository;
+    private final NotificationMapper notificationMapper;
     @Override
     public void saveFcmToken(FcmTokenRequest tokenRequest) {
         Long userId = authService.getAuthenticatedUserId();
@@ -33,7 +35,7 @@ public class NotificationServices  implements INotificationServices {
         user.setFcmToken(tokenRequest.getFcmToken());
         userRepository.save(user);
     }
-    @Override
+   /* @Override
     public Page<Notification> getNotifications(int pageNo, int pageSize) {
         Long userId = authService.getAuthenticatedUserId();
 
@@ -43,7 +45,23 @@ public class NotificationServices  implements INotificationServices {
         Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, "sentAt"));
 
         return notificationRepository.findByUserId(userId, pageable);
-    }
+    }*/
+
+   @Override
+   public Page<NotificationResponse> getNotifications(int pageNo, int pageSize) {
+       Long userId = authService.getAuthenticatedUserId();
+
+       User user = userRepository.findById(userId)
+               .orElseThrow(() -> new EntityNotFoundException("User with ID: " + userId + " not found"));
+
+       Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, "sentAt"));
+
+       Page<Notification> notifications = notificationRepository.findByUserId(userId, pageable);
+
+       // Convertir les notifications en NotificationResponse en utilisant le mapper
+       return notifications.map(notificationMapper::mapToDto);
+   }
+
 
 
 }

@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.exemple.medicare.entities.dto.FcmTokenRequest;
 import tn.exemple.medicare.entities.notification.Notification;
+import tn.exemple.medicare.entities.notification.NotificationResponse;
 import tn.exemple.medicare.services.INotificationServices;
 import tn.exemple.medicare.services.impl.NotificationServices;
 
@@ -20,7 +21,7 @@ public class NotificationController {
         return ResponseEntity.ok("FCM Token saved successfully!");
     }
     @GetMapping("/all")
-    public Page<Notification> getNotifications(
+    public Page<NotificationResponse> getNotifications(
             @RequestParam(defaultValue = "0") int pageNo,
             @RequestParam(defaultValue = "10") int pageSize
     ) {

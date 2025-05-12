@@ -43,14 +43,16 @@ public class UserController {
     @PostMapping("/adduser")
 
     public ResponseEntity<?> addUser(
-            @RequestParam(value = "photo", required = false)  MultipartFile file,
+            @RequestParam(value = "photo", required = false) MultipartFile photo,
+            @RequestParam(value = "medicalCard", required = false) MultipartFile medicalCard,
             @RequestParam @Valid Map<String, Object> userMap
 
     ) throws Exception {
-        AuthenticationResponse user = iUserSevices.register(userMap , file);
+        AuthenticationResponse user = iUserSevices.register(userMap , photo,medicalCard);
         SignUpMessage message = new SignUpMessage(user, "An activation code has been sent to your email");
         return ResponseEntity.accepted().body(message);
     }
+
 
 
 
@@ -130,11 +132,9 @@ public class UserController {
     @GetMapping("/list/role")
     public ResponseEntity<List<UserDto>> getUsersByRole() {
         List<UserDto> users = iUserSevices.getUsersByRole();
-        if (users.isEmpty()) {
-            throw new EntityNotFoundException("Empty List" );
-        }
         return ResponseEntity.ok(users);
     }
+
     @PutMapping("{id}")
     User  UpdateUser(@PathVariable Long id, @RequestParam User user) {
         return iUserSevices.UpdateUser(id, user);

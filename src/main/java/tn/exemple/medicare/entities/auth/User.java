@@ -155,7 +155,6 @@ public  class User implements Serializable , UserDetails , Principal {
     @OneToMany(mappedBy = "user" , cascade = CascadeType.ALL, orphanRemoval = true)
     private  List<Codes> codes;
 
-
     @JsonIgnore
     @OneToMany(mappedBy = "user" , cascade = CascadeType.ALL, orphanRemoval = true)
     private  List<RefreshToken> refreshTokens;
@@ -164,6 +163,4 @@ public  class User implements Serializable , UserDetails , Principal {
     @JsonManagedReference
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Prescription> prescriptions;
-
-
 }

@@ -19,7 +19,8 @@ import java.util.Set;
 
 public class Doctor extends User {
 
-    String specialty ;
+    String speciality ;
+    String medicalCard;
 
 
     public  Doctor (){
