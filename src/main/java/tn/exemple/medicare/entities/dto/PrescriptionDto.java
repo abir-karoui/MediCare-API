@@ -12,8 +12,8 @@ import java.util.List;
 @NoArgsConstructor
 public class PrescriptionDto {
 
-    private int durationDays;
-    private String stockActuel;
+    private Integer durationDays;
+    private Integer  stockActuel;
     private MedicationDto medication;
     private List<DoseDto> doses;
 // Utilise l'héritage pour partager des comportements ou des attributs communs entre plusieurs classes. Utile quand les entités ont des caractéristiques communes mais ont aussi des comportements spécifiques qui doivent être personnalisés dans les sous-classes.
@@ -26,6 +26,6 @@ public class PrescriptionDto {
     public static class DoseDto {
         @JsonFormat(pattern = "HH:mm")
         private LocalTime timeToTake;
-        private String quantity;
+        private Integer  quantity;
     }
 }

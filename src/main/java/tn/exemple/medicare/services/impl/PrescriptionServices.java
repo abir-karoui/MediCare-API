@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tn.exemple.medicare.configs.AuthService;
 import tn.exemple.medicare.entities.auth.User;
 import tn.exemple.medicare.entities.prescription.Dose;
@@ -11,10 +12,7 @@ import tn.exemple.medicare.entities.prescription.Medication;
 import tn.exemple.medicare.entities.prescription.Prescription;
 import tn.exemple.medicare.entities.dto.PrescriptionDto;
 import tn.exemple.medicare.mappers.PrescriptionMapper;
-import tn.exemple.medicare.repositories.IDoseRepository;
-import tn.exemple.medicare.repositories.IMedicationRepository;
-import tn.exemple.medicare.repositories.IPrescriptionRepository;
-import tn.exemple.medicare.repositories.IUserRepository;
+import tn.exemple.medicare.repositories.*;
 import tn.exemple.medicare.services.IPrescriptionServices;
 
 import java.util.*;
@@ -31,6 +29,7 @@ public class PrescriptionServices implements IPrescriptionServices {
     private final IMedicationRepository iMedicationRepository;
     private  final PrescriptionMapper prescriptionMapper;
     private  final AuthService authService;
+    private  final NotificationRepository notificationRepository;
 
     public Prescription createPrescription(PrescriptionDto prescriptionDto) {
 
@@ -97,6 +96,7 @@ public class PrescriptionServices implements IPrescriptionServices {
         return prescription;
     }
     @Override
+    @Transactional
     public void deletePrescription(Long prescriptionId) {
         Long userId = authService.getAuthenticatedUserId();
         User user = iUserRepository.findById(userId)
@@ -110,6 +110,8 @@ public class PrescriptionServices implements IPrescriptionServices {
         if (prescription.getDoses() != null && !prescription.getDoses().isEmpty()) {
             iDoseRepository.deleteAll(prescription.getDoses());
         }
+
+        notificationRepository.nullifyPrescriptionReferences(prescriptionId);
         iPrescriptionRepository.delete(prescription);
     }
 

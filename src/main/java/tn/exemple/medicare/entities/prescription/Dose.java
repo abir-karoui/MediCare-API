@@ -20,11 +20,11 @@ public class Dose {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    long id;
+    private long id;
     @JsonFormat(pattern = "HH:mm")
-    LocalTime timeToTake;
+    private LocalTime timeToTake;
 
-     String  quantity;
+    private Integer quantity;
     @ManyToOne
     @JsonBackReference
     @JoinColumn(name = "prescription_id")

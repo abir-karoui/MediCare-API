@@ -38,6 +38,8 @@ public class Notification {
     private User user;
     @ManyToOne
     @JsonIgnore
+    @JoinColumn(name = "prescription_id", nullable = true)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private Prescription prescription;
 
    @ManyToOne(fetch = FetchType.LAZY)

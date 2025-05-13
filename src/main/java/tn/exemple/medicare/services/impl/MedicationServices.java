@@ -9,13 +9,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
 import tn.exemple.medicare.entities.prescription.Medication;
 import tn.exemple.medicare.repositories.IMedicationRepository;
 import tn.exemple.medicare.services.IMedicationServices;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +34,14 @@ import java.util.Optional;
         private final WebClient webClient; //WebClient c’est un outil de Spring pour envoyer des requêtes HTTP(comme postman mais en java)
         @Autowired
         public MedicationServices(WebClient.Builder webClientBuilder) {
-            this.webClient = webClientBuilder.baseUrl("https://api-bdpm-graphql.axel-op.fr/graphql").build();
+            HttpClient httpClient = HttpClient.create()
+                    .responseTimeout(Duration.ofSeconds(60)); // ⏱ Timeout de 5 secondes
+
+            this.webClient = webClientBuilder
+                    .baseUrl("https://api-bdpm-graphql.axel-op.fr/graphql")
+                    .clientConnector(new ReactorClientHttpConnector(httpClient)) // 🔗 Ajout du timeout ici
+                    .build();
+            //this.webClient = webClientBuilder.baseUrl("https://api-bdpm-graphql.axel-op.fr/graphql").build();
         } //WebClient.Builder pour configurer l'URL de base de l'API GraphQL
 
         @Override

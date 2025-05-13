@@ -25,8 +25,8 @@ public class Prescription {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     long id;
-    int durationDays;
-    String stockActuel;
+    Integer  durationDays;
+    Integer stockActuel;
     @OneToMany(mappedBy = "prescription", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<Dose> doses;
