@@ -30,15 +30,15 @@ public class EmailService {
 
           String text;
           if (typeCode == TypeCode.ACTIVATION) {
-               text = "Bonjour " + username + ",\n\n"
-                       + "Voici votre code d'activation : " + code + "\n"
-                       + "Cordialement,\n"
-                       + "L'équipe d'assistance technique de Medicare";
+               text = "Good Morning " + username + ",\n\n"
+                       + "Here is your activation code: " + code + "\n"
+                       + "Best regards,\n"
+                       + "The Medicare Support Team";
           } else if (typeCode == TypeCode.RESET) {
-               text = "Bonjour " + username + ",\n\n"
-                       + "Voici votre code de réinitialisation : " + code + "\n"
-                       + "Cordialement,\n"
-                       + "L'équipe d'assistance technique de Medicare";
+               text = "Good Morning " + username + ",\n\n"
+                       + "Here is your password reset code: " + code + "\n"
+                       + "Best regards,\n"
+                       + "The Medicare Support Team";
           }else {
                throw new IllegalArgumentException("Type de code inconnu");
           }
@@ -50,4 +50,24 @@ public class EmailService {
 
           mailSender.send(mimeMessage);
      }
+     @Async
+     public void sendSimpleMessage(String to, String username, String subject, String messageBody) throws MessagingException {
+          MimeMessage mimeMessage = mailSender.createMimeMessage();
+          MimeMessageHelper helper = new MimeMessageHelper(
+                  mimeMessage,
+                  MimeMessageHelper.MULTIPART_MODE_MIXED,
+                  StandardCharsets.UTF_8.name()
+          );
+          String text = "Good Morning " + username + ",\n\n" +
+                  messageBody + "\n\n" +
+                  "Best regards,\n" +
+                  "The Medicare Support Team";
+          helper.setFrom("abir.belkaroui@gmail.com");
+          helper.setTo(to);
+          helper.setSubject(subject);
+          helper.setText(text, false);
+
+          mailSender.send(mimeMessage);
+     }
+
 }
