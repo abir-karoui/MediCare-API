@@ -56,6 +56,7 @@ public class UserServices implements IUserSevices {
     private final RefreshTokenRepositroty refreshTokenRepositroty;
     private final FileUploadImpl  fileUpload;
     private  final AuthService authService;
+    private  final IDoctorRepository iDoctorRepository;
 
     public AuthenticationResponse register(Map<String, Object> userMap, MultipartFile photo, MultipartFile medicalCard) throws Exception
     {
@@ -83,6 +84,7 @@ public class UserServices implements IUserSevices {
 
         if (user instanceof Doctor doctor) {
             doctor.setMedicalCard(medicalCard != null && !medicalCard.isEmpty() ? fileUpload.uploadImage(medicalCard) : null);
+            doctor.setMedicalCardVerified(false);
         }
 
         var savedUser = iUserRepository.save(user);
@@ -153,32 +155,37 @@ public class UserServices implements IUserSevices {
 
     @Override
     public AuthenticationResponse login(AuthenticationRequest request) {
-        try { var auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
-            var claims = new HashMap<String, Object>();
+        try {
+            var auth = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+            );
+
             var user = ((User)auth.getPrincipal());
+
+            if (user instanceof Doctor) {
+                Doctor doctor = (Doctor) user;
+                if (!doctor.isMedicalCardVerified()) {
+                    throw new BusinessException(BusinessErrorCode.MEDICAL_CARD_NOT_VERIFIED);
+                }
+            }
+            var claims = new HashMap<String, Object>();
             claims.put("fullName" , user.fullName());
             claims.put("userId", user.getId());
             var jwtToken = jwtService.generateToken(claims , user);
             var refreshToken = jwtService.generateRefreshToken(user);
             Long extractedUserId = jwtService.extractUserId(jwtToken);
             System.out.println("Extracted User ID from JWT: " + extractedUserId);
-
-
             saveRefreshToken(user, refreshToken);
             return AuthenticationResponse.builder().accessToken(jwtToken).refreshToken(refreshToken).build();
-        }  catch (BadCredentialsException e) {
+
+        } catch (BadCredentialsException e) {
             throw e;
-        }
-        catch (DisabledException e) {
+        } catch (BusinessException e) {
             throw e;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("Une erreur est survenue lors de l'authentification.", e);
         }
     }
-
 
     @Override
     public void changePassword(ChangePasswordRequest request , Principal connectedUser) {
@@ -245,26 +252,6 @@ public class UserServices implements IUserSevices {
     public Optional<User> getUserById(Long id) {
         return iUserRepository.findById(id);
     }
-
-
-   /* public List<User> getUsersByRole(TypeRole role) {
-        return  iUserRepository.findAllByRole(role);
-    }*/
-
-    /*public List<User> getUsersByRole() {
-        TypeRole role = authService.getAuthenticatedUserRole();
-      if(role == TypeRole.DOCTOR){
-          return iUserRepository.findAllByRole(TypeRole.PATIENT);
-      } else if (role == TypeRole.PATIENT) {
-
-          return iUserRepository.findAllByRole(TypeRole.DOCTOR);
-
-      }
-
-        return  List.of();
-    }
-
-*/
     @Override
     public List<UserDto> getUsersByRole() {
         TypeRole role = authService.getAuthenticatedUserRole();
@@ -291,8 +278,6 @@ public class UserServices implements IUserSevices {
         user.setId(id);
         return iUserRepository.save(user) ;
     }
-
-
 
     @Transactional
     @Override
@@ -365,6 +350,13 @@ public class UserServices implements IUserSevices {
         refreshTokenRepositroty.deleteByUser(user);
     }
 
+    @Override
+    public UserDto getMe() {
+        Long userId = authService.getAuthenticatedUserId();
+        User user = iUserRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User with ID " + userId + " not found"));
+        return UserMapper.toDto(user); }
+
 }
 
 
@@ -412,4 +404,23 @@ public class UserServices implements IUserSevices {
                 .refreshToken(refreshToken)
                 .build();
     }
+
+
+   /* public List<User> getUsersByRole(TypeRole role) {
+        return  iUserRepository.findAllByRole(role);
+    }*/
+
+    /*public List<User> getUsersByRole() {
+        TypeRole role = authService.getAuthenticatedUserRole();
+      if(role == TypeRole.DOCTOR){
+          return iUserRepository.findAllByRole(TypeRole.PATIENT);
+      } else if (role == TypeRole.PATIENT) {
+
+          return iUserRepository.findAllByRole(TypeRole.DOCTOR);
+
+      }
+
+        return  List.of();
+    }
+
 */

@@ -26,7 +26,6 @@ public class MedicationReminderScheduler {
     private final FCMService fcmService;
     private  final NotificationRepository notificationRepository;
     private Logger logger = LoggerFactory.getLogger(FCMService.class);
-
     @Scheduled(cron = "0 * * * * *")
     public void checkDoses() {
         LocalTime now = LocalTime.now().withSecond(0).withNano(0);
@@ -38,7 +37,6 @@ public class MedicationReminderScheduler {
                 doseRepository.save(dose);
             }
         });
-
     }
     @Scheduled(cron = "0 0 0 * * *") // Tous les jours à 00:00
     @Transactional
@@ -46,7 +44,6 @@ public class MedicationReminderScheduler {
         //System.out.println("resetNotifiedDoses execute a : " + LocalTime.now());
         doseRepository.resetAllNotifiedDoses();
     }
-
     public void sendDoseNotification( Dose dose) {
         User patient = dose.getPrescription().getUser();
         String body = String.format("It's time to take %s at %s, with a dosage of %s.",

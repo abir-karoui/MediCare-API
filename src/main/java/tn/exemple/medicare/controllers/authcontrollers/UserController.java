@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tn.exemple.medicare.configs.JwtService;
 import tn.exemple.medicare.configs.UserDetailsServices;
+import tn.exemple.medicare.entities.Doctor;
+import tn.exemple.medicare.entities.Patient;
 import tn.exemple.medicare.entities.auth.User;
 import tn.exemple.medicare.entities.dto.UserDto;
 import tn.exemple.medicare.enums.TypeRole;
@@ -23,6 +25,7 @@ import tn.exemple.medicare.services.IUserSevices;
 import java.io.IOException;
 import java.security.Principal;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -151,6 +154,32 @@ public class UserController {
 
         }
     }
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> getMe() {
+        UserDto dto = iUserSevices.getMe();
+        return ResponseEntity.ok(dto);
+    }
+    /*@GetMapping("/me")
+    public ResponseEntity<Map<String, Object>> getMe() {
+        User user = iUserSevices.getMe();
+        Map<String, Object> userInfo = new HashMap<>();
+        userInfo.put("id", user.getId());
+        userInfo.put("firstname", user.getFirstname());
+        userInfo.put("lastname", user.getLastname());
+        userInfo.put("password", user.getPassword());
+        userInfo.put("email", user.getEmail());
+        userInfo.put("phone", user.getPhone());
+        userInfo.put("address", user.getAddress());
+        userInfo.put("photo", user.getPhoto());
+        userInfo.put("role", user.getRole());
+        userInfo.put("gender", user.getGender());
+        if (user instanceof Patient patient) {
+            userInfo.put("age", patient.getAge());
+        } else if (user instanceof Doctor doctor) {
+            userInfo.put("speciality", doctor.getSpeciality());
+        }
+        return ResponseEntity.ok(userInfo);
+    }*/
     @DeleteMapping("/")
     public void deleteAllUser(){ iUserSevices.deleteAllUser();}
 

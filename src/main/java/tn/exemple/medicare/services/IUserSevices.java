@@ -45,6 +45,7 @@ public interface IUserSevices {
     void  deleteUserById(Long id);
     void deleteAllUser();
     void logout(User user);
+    UserDto getMe() ;
 
 
 }

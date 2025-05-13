@@ -18,7 +18,10 @@ public enum BusinessErrorCode {
     EMAIL_ALREADY_EXISTS(1005, CONFLICT, "Email address is already registered"),
     CODE_Expired(3001, BAD_REQUEST, "Code has expired. Please request a new one" ),
     CODE_INCORRECT(3002, BAD_REQUEST, "Incorrect code, please verify your code" ),
-    INVITATION_ALREADY_SENT(4000, CONFLICT, "Invitation has already been sent to this user");
+    INVITATION_ALREADY_SENT(4000, CONFLICT, "Invitation has already been sent to this user"),
+    MEDICAL_CARD_NOT_VERIFIED(5000,BAD_REQUEST,"Your medical card has not yet been verified by the administrator."),
+
+    MEDICAL_CARD_ALREADY_VERIFIED(5001,BAD_REQUEST,"The medical card has already been verified.")
 
 
     ;

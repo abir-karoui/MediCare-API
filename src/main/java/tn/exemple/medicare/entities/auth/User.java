@@ -56,7 +56,6 @@ public  class User implements Serializable , UserDetails , Principal {
     private String address;
     private String photo;
 
-
     @Enumerated(EnumType.STRING)
     private TypeRole role;
     @Enumerated(EnumType.STRING)

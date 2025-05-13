@@ -22,5 +22,4 @@ public class UserDto {
     private TypeGender gender ;
     private String speciality;
     private String age;
-
 }

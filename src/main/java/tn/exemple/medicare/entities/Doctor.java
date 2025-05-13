@@ -19,10 +19,9 @@ import java.util.Set;
 
 public class Doctor extends User {
 
-    String speciality ;
-    String medicalCard;
-
-
+    private String speciality ;
+    private String medicalCard;
+    private boolean medicalCardVerified;
     public  Doctor (){
         this.setRole(TypeRole.DOCTOR);
     }

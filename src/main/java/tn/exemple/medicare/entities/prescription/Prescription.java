@@ -25,17 +25,14 @@ public class Prescription {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     long id;
-
     int durationDays;
     String stockActuel;
     @OneToMany(mappedBy = "prescription", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<Dose> doses;
-
     @ManyToOne
     @JoinColumn(name = "medication_id")
     private Medication medication;
-
     @ManyToOne
     @JsonBackReference
     @JoinColumn(name = "user_id")
@@ -43,7 +40,6 @@ public class Prescription {
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
-
     public boolean isActive() {
         return ChronoUnit.DAYS.between(createdAt.toLocalDate(), LocalDate.now()) <= durationDays;
     }
