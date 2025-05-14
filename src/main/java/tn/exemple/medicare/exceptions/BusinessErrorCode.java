@@ -12,6 +12,7 @@ public enum BusinessErrorCode {
     NOT_FOUND(3000, NOT_IMPLEMENTED, "User not found" ),
     INCORRECT_CURRENT_PASSWORD(1000, BAD_REQUEST, "Current password is incorrect"),
     NEW_PASSWORD_DOSES_NOT_MATCH(1001, BAD_REQUEST, "New password does not match"),
+    INCORRECT_PASSWORD(1002, BAD_REQUEST, "Password is incorrect"),
     ACCOUNT_LOCKED(1002, FORBIDDEN, "User account is locked"),
     ACCOUNT_DISABLED(1003, FORBIDDEN, "User account is disabled"),
     BAD_CREDENTIALS(1004, FORBIDDEN, "Email or password is incorrect"),

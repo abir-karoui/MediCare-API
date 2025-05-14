@@ -194,7 +194,7 @@ public class UserServices implements IUserSevices {
             throw new   BusinessException(BusinessErrorCode.INCORRECT_CURRENT_PASSWORD);
         }
         if (!request.getNewPassword().equals(request.getConfirmationPassword())){
-            throw    new BusinessException(BusinessErrorCode.NEW_PASSWORD_DOSES_NOT_MATCH);
+            throw  new BusinessException(BusinessErrorCode.NEW_PASSWORD_DOSES_NOT_MATCH);
         }
         user.setPassword((passwordEncoder.encode(request.getNewPassword()))); //update
         iUserRepository.save(user);
@@ -287,7 +287,17 @@ public class UserServices implements IUserSevices {
         }
         iUserRepository.deleteById(id);
     }
-
+    @Transactional
+    @Override
+    public void deleteMe(String password) {
+        Long userId = authService.getAuthenticatedUserId();
+        User user = iUserRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User with Id: '" + userId + "' not found"));
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new BusinessException(BusinessErrorCode.INCORRECT_PASSWORD);
+        }
+        iUserRepository.deleteById(userId);
+    }
     @Override
     public void deleteAllUser() {
         iUserRepository.deleteAll();

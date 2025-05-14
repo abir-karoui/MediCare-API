@@ -11,6 +11,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import tn.exemple.medicare.entities.notification.Notification;
 import tn.exemple.medicare.entities.prescription.Prescription;
 import tn.exemple.medicare.enums.TypeGender;
 import tn.exemple.medicare.enums.TypeRole;
@@ -158,8 +159,14 @@ public  class User implements Serializable , UserDetails , Principal {
     @OneToMany(mappedBy = "user" , cascade = CascadeType.ALL, orphanRemoval = true)
     private  List<RefreshToken> refreshTokens;
 
+
     @JsonIgnore
     @JsonManagedReference
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Prescription> prescriptions;
+    @JsonIgnore
+    @JsonManagedReference
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notification> notifications;
+
 }

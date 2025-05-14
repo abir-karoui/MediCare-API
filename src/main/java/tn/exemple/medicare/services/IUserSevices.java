@@ -46,6 +46,7 @@ public interface IUserSevices {
     void deleteAllUser();
     void logout(User user);
     UserDto getMe() ;
+    void deleteMe(String password);
 
 
 }

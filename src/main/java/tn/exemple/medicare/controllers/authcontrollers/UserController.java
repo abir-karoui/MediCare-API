@@ -18,6 +18,7 @@ import tn.exemple.medicare.configs.UserDetailsServices;
 import tn.exemple.medicare.entities.Doctor;
 import tn.exemple.medicare.entities.Patient;
 import tn.exemple.medicare.entities.auth.User;
+import tn.exemple.medicare.entities.dto.DeleteAccountRequest;
 import tn.exemple.medicare.entities.dto.UserDto;
 import tn.exemple.medicare.enums.TypeRole;
 import tn.exemple.medicare.services.IUserSevices;
@@ -95,6 +96,11 @@ public class UserController {
             @RequestParam String newPassword) {
         iUserSevices.resetPassword(email, code, newPassword);
         return ResponseEntity.ok("Password successfully reset.");
+    }
+    @DeleteMapping("/delete-account")
+    public ResponseEntity<String> deleteAccount(@RequestBody DeleteAccountRequest request) {
+        iUserSevices.deleteMe(request.getPassword());
+        return ResponseEntity.ok("Compte supprimé avec succès.");
     }
 
 

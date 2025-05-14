@@ -1,6 +1,7 @@
 package tn.exemple.medicare.entities.notification;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -33,8 +34,11 @@ public class Notification {
     private LocalDateTime sentAt;
     @Enumerated(EnumType.STRING)
     private NotificationType type;
-    @JsonIgnore
     @ManyToOne
+    @JsonIgnore
+
+    @JsonBackReference
+
     private User user;
     @ManyToOne
     @JsonIgnore
