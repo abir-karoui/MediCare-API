@@ -160,10 +160,13 @@ public  class User implements Serializable , UserDetails , Principal {
     private  List<RefreshToken> refreshTokens;
 
 
-    @JsonIgnore
+   /* @JsonIgnore
     @JsonManagedReference
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Prescription> prescriptions;
+    private List<Prescription> prescriptions;*/
+
+
+
     @JsonIgnore
     @JsonManagedReference
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

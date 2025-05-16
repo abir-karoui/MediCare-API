@@ -1,18 +1,39 @@
 package tn.exemple.medicare.controllers;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import tn.exemple.medicare.entities.Doctor;
+import tn.exemple.medicare.entities.dto.PrescriptionDto;
+import tn.exemple.medicare.entities.prescription.Prescription;
 import tn.exemple.medicare.services.IDoctor;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/doctor")
 @RequiredArgsConstructor
 public class DoctorController {
-    private IDoctor iDoctor;
+    private final IDoctor iDoctor;
+    @PostMapping("/createPrescriptionForPatient/{patientId}")
+    public Prescription createPrescriptionForPatient(@PathVariable Long patientId, @RequestBody PrescriptionDto prescriptionDto) {
+        return iDoctor.createPrescriptionForPatient(patientId, prescriptionDto);
+    }
+    @GetMapping("/getprescription/{patientId}")
+    public ResponseEntity<List<Prescription>> getPrescriptions(@PathVariable Long patientId) {
+        List<Prescription> prescriptions = iDoctor.getPrescriptions(patientId);
+        return ResponseEntity.ok(prescriptions);
+    }
+    @GetMapping("/getNotprescription/{patientId}")
+    public ResponseEntity<List<Prescription>> getPrescriptionsNotCreatedByDoctor(@PathVariable Long patientId) {
+        List<Prescription> prescriptions = iDoctor.getPrescriptionsNotCreatedByDoctor(patientId);
+        return ResponseEntity.ok(prescriptions);
+    }
+
+    @DeleteMapping("/prescription/{id}")
+    public void deletePrescription(@PathVariable Long id) {
+        iDoctor.deletePrescription(id);
+    }
 
 
 }

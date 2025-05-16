@@ -27,8 +27,7 @@ public class Dose {
     private Integer quantity;
     @ManyToOne
     @JsonBackReference
-    @JoinColumn(name = "prescription_id")
-
+    @JoinColumn(name = "prescription_id", nullable = false)
     private Prescription prescription;
     private boolean notified = false;
 }

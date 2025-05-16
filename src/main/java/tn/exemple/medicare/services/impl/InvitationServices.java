@@ -7,6 +7,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import tn.exemple.medicare.configs.AuthService;
 import tn.exemple.medicare.entities.auth.User;
+import tn.exemple.medicare.entities.dto.UserDto;
 import tn.exemple.medicare.entities.invitation.Invitation;
 import tn.exemple.medicare.entities.invitation.InvitationStatus;
 import tn.exemple.medicare.entities.notification.Notification;
@@ -15,6 +16,7 @@ import tn.exemple.medicare.enums.NotificationType;
 import tn.exemple.medicare.enums.TypeRole;
 import tn.exemple.medicare.exceptions.BusinessErrorCode;
 import tn.exemple.medicare.exceptions.BusinessException;
+import tn.exemple.medicare.mappers.UserMapper;
 import tn.exemple.medicare.repositories.IUserRepository;
 import tn.exemple.medicare.repositories.InvitationRepository;
 import tn.exemple.medicare.repositories.NotificationRepository;
@@ -23,6 +25,7 @@ import tn.exemple.medicare.services.IInvitation;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,41 +36,7 @@ public class InvitationServices implements IInvitation {
     private final AuthService authService;
     private final FCMService fcmService;
     private  final NotificationRepository notificationRepository;
-
-    /*@Override
-    public Invitation sendInvitation(Long receiverId) {
-        Long senderId = authService.getAuthenticatedUserId();
-        User sender = userRepository.findById(senderId)
-                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
-
-        User receiver = userRepository.findById(receiverId)
-                .orElseThrow(() -> new EntityNotFoundException("Receiver not found"));
-
-        if (sender.getRole() == receiver.getRole()) {
-            throw new IllegalArgumentException("Sender and receiver cannot have the same role");
-        }
-
-        if ((sender.getRole() == TypeRole.PATIENT && receiver.getRole() != TypeRole.DOCTOR) ||
-                (sender.getRole() == TypeRole.DOCTOR && receiver.getRole() != TypeRole.PATIENT)) {
-            throw new IllegalArgumentException("Invalid invitation: roles not allowed");
-        }
-
-        Optional<Invitation> existingInvitation = invitationRepository.findPendingInvitation(senderId, receiverId);
-        if (existingInvitation.isPresent()) {
-            throw new BusinessException(BusinessErrorCode.INVITATION_ALREADY_SENT);
-        }
-
-        Invitation invitation = Invitation.builder()
-                .sender(sender)
-                .receiver(receiver)
-                .senderType(sender.getRole())
-                .receiverType(receiver.getRole())
-                .status(InvitationStatus.PENDING)
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        return invitationRepository.save(invitation);
-    }*/
+    private final IUserRepository iUserRepository;
 
     @Override
     public Invitation sendInvitation(Long receiverId) {
@@ -106,7 +75,7 @@ public class InvitationServices implements IInvitation {
         if (receiver.getFcmToken() != null && !receiver.getFcmToken().isBlank()) {
             NotificationRequest notif = new NotificationRequest();
             notif.setTitle("New invitation");
-            notif.setBody(sender.getFirstname()+ sender.getLastname() + " sent you an invitation" );
+            notif.setBody(sender.getFirstname()+ " " +sender.getLastname() + " sent you an invitation" );
             notif.setToken(receiver.getFcmToken());
 
             try {
@@ -119,7 +88,6 @@ public class InvitationServices implements IInvitation {
                         .invitation(invitation)
                         .user(receiver)
                         .build();
-
                 notificationRepository.save(entity);
             } catch (Exception e) {
                 System.out.println("Error sending notification : " + e.getMessage());
@@ -130,14 +98,7 @@ public class InvitationServices implements IInvitation {
     }
 
 
-    /*@Override
-    public Invitation acceptInvitation(Long invitationId) {
-        Invitation invitation = getInvitationById(invitationId);
-        checkIfReceiver(invitation);
 
-        invitation.setStatus(InvitationStatus.ACCEPTED);
-        return invitationRepository.save(invitation);
-    }*/
     @Override
     public Invitation acceptInvitation(Long invitationId) {
         Invitation invitation = getInvitationById(invitationId);
@@ -152,7 +113,7 @@ public class InvitationServices implements IInvitation {
         if (sender.getFcmToken() != null && !sender.getFcmToken().isBlank()) {
             NotificationRequest notif = new NotificationRequest();
             notif.setTitle("Invitation accepted");
-            notif.setBody(receiver.getFirstname() + receiver.getLastname() +"  has accepted your invitation");
+            notif.setBody(receiver.getFirstname() + " " + receiver.getLastname() +"  has accepted your invitation");
             notif.setToken(sender.getFcmToken());
 
             try {
@@ -198,4 +159,38 @@ public class InvitationServices implements IInvitation {
         return invitationRepository.findLatestBetweenUsers(currentUserId, otherUserId);
     }
 
+    @Override
+    public List<UserDto> getConnectedUsers() {
+        Long currentUserId = authService.getAuthenticatedUserId();
+        User currentUser = iUserRepository.findById(currentUserId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        List<Invitation> invitations = invitationRepository.findAcceptedInvitationsByUser(currentUserId);
+        List<User> connectedUsers = invitations.stream()
+                .map(invitation -> {
+                    if (invitation.getSender().getId() == currentUserId) {
+                        return invitation.getReceiver();
+                    } else {
+                        return invitation.getSender();
+                    }
+                })
+                .distinct()
+                .toList();
+
+        return connectedUsers.stream()
+                .map(UserMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean areUsersConnected(Long userId) {
+        Long currentUserId = authService.getAuthenticatedUserId();
+        iUserRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(BusinessErrorCode.NOT_FOUND));
+
+        List<Invitation> invitations = invitationRepository.findAcceptedInvitationsByUser(currentUserId);
+        return invitations.stream()
+                .anyMatch(invitation ->
+                        (invitation.getSender().getId() == userId || invitation.getReceiver().getId() == userId)
+                                && invitation.getStatus() == InvitationStatus.ACCEPTED);
+    }
 }

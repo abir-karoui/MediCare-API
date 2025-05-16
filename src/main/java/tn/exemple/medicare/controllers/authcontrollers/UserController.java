@@ -43,6 +43,14 @@ public class UserController {
     @Autowired
     private UserDetailsServices userDetailsServices;
     public record SignUpMessage(AuthenticationResponse user , String message) {}
+    @PatchMapping("/update/me")
+    public ResponseEntity<?> updateProfile (
+            @RequestParam Map<String, Object> userMap,
+            @RequestParam (value = "photo", required = false) MultipartFile file) throws Exception {
+        AuthenticationResponse response = iUserSevices.updateProfile(userMap, file);
+        return ResponseEntity.ok(response);
+    }
+
 
     @PostMapping("/adduser")
 
@@ -144,10 +152,6 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    @PutMapping("{id}")
-    User  UpdateUser(@PathVariable Long id, @RequestParam User user) {
-        return iUserSevices.UpdateUser(id, user);
-    }
 
     @DeleteMapping("{id}")
     public ResponseEntity<String> deleteUserById(@PathVariable Long id) {

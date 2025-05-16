@@ -41,12 +41,13 @@ public interface IUserSevices {
     List<User> retrieveAllUsers();
     Optional<User> getUserById(Long id);
     List<UserDto> getUsersByRole();
-    User UpdateUser(Long id , User user) ;
+    //User UpdateUser(Long id , User user) ;
     void  deleteUserById(Long id);
     void deleteAllUser();
     void logout(User user);
     UserDto getMe() ;
     void deleteMe(String password);
+    AuthenticationResponse updateProfile(Map<String, Object> userParams, MultipartFile file)  throws Exception;
 
 
 }

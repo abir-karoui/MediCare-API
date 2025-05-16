@@ -17,7 +17,7 @@ public interface IDoseRepository extends JpaRepository<Dose, Long> {
     @Query("SELECT d FROM Dose d WHERE " +
             "d.timeToTake BETWEEN :start AND :end AND " +
             "d.notified = false AND " +
-            "d.prescription.user.fcmToken IS NOT NULL")
+            "d.prescription.patient.fcmToken IS NOT NULL")
     List<Dose> findUnnotifiedDosesNearNow(
             @Param("start") LocalTime start,
             @Param("end") LocalTime end

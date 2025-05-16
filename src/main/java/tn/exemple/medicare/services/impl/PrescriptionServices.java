@@ -6,11 +6,14 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tn.exemple.medicare.configs.AuthService;
+import tn.exemple.medicare.entities.Doctor;
+import tn.exemple.medicare.entities.Patient;
 import tn.exemple.medicare.entities.auth.User;
 import tn.exemple.medicare.entities.prescription.Dose;
 import tn.exemple.medicare.entities.prescription.Medication;
 import tn.exemple.medicare.entities.prescription.Prescription;
 import tn.exemple.medicare.entities.dto.PrescriptionDto;
+import tn.exemple.medicare.enums.TypeRole;
 import tn.exemple.medicare.mappers.PrescriptionMapper;
 import tn.exemple.medicare.repositories.*;
 import tn.exemple.medicare.services.IPrescriptionServices;
@@ -23,6 +26,9 @@ import java.util.stream.Collectors;
 
 public class PrescriptionServices implements IPrescriptionServices {
     private final IUserRepository iUserRepository;
+    private final IPatientRepository iPatientRepository;
+
+    private final IDoctorRepository iDoctorRepository;
     private final IPrescriptionRepository iPrescriptionRepository;
     private final IDoseRepository iDoseRepository;
     private final MedicationServices medicationServices;
@@ -30,11 +36,12 @@ public class PrescriptionServices implements IPrescriptionServices {
     private  final PrescriptionMapper prescriptionMapper;
     private  final AuthService authService;
     private  final NotificationRepository notificationRepository;
+    private  final InvitationServices invitationServices;
 
     public Prescription createPrescription(PrescriptionDto prescriptionDto) {
 
         Long userId = authService.getAuthenticatedUserId();
-        User user = iUserRepository.findById(userId)
+        Patient patient = iPatientRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User with Id: '" + userId + "' not found"));
         Medication medication = iMedicationRepository.findByDenomination(prescriptionDto.getMedication().getDenomination());
         if (medication == null) {
@@ -52,7 +59,7 @@ public class PrescriptionServices implements IPrescriptionServices {
         }
 
         Prescription prescription = prescriptionMapper.toEntity(prescriptionDto);
-        prescription.setUser(user);
+        prescription.setPatient(patient);
         prescription.setMedication(medication);
 
         // Lier les doses
@@ -79,18 +86,29 @@ public class PrescriptionServices implements IPrescriptionServices {
         User user = iUserRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User with ID: " + userId + " not found"));
 
-          List<Prescription> prescriptions = iPrescriptionRepository.findByUserId(userId);
+          List<Prescription> prescriptions = iPrescriptionRepository.findByPatientIdOrderByCreatedAtDesc(userId);
         return prescriptions;
     }
     @Override
-    public Prescription getPrescriptionById(Long prescriptionId ) {
+    public Prescription getPrescriptionById(Long prescriptionId) {
         Long userId = authService.getAuthenticatedUserId();
         User user = iUserRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User with ID: " + userId + " not found"));
 
-        Prescription prescription = iPrescriptionRepository.findByUserIdAndId(userId, prescriptionId);
+        Prescription prescription;
+
+        if (user instanceof Doctor) {
+            prescription = iPrescriptionRepository.findByIdAndDoctorId(prescriptionId, userId)
+                    .orElse(null);
+        } else if (user instanceof Patient) {
+            prescription = iPrescriptionRepository.findByIdAndPatientId(prescriptionId, userId)
+                    .orElse(null);
+        } else {
+            throw new AccessDeniedException("User type not authorized to access prescription");
+        }
+
         if (prescription == null) {
-            throw new EntityNotFoundException("Prescription with ID: " + prescriptionId + " for user ID: " + userId + " not found");
+            throw new EntityNotFoundException("Prescription with ID: " + prescriptionId + " not found for user ID: " + userId);
         }
 
         return prescription;
@@ -104,7 +122,7 @@ public class PrescriptionServices implements IPrescriptionServices {
         Prescription prescription = iPrescriptionRepository.findById(prescriptionId)
                 .orElseThrow(() -> new EntityNotFoundException("Prescription with ID: " + prescriptionId + " not found"));
 
-        if (prescription.getUser().getId() != userId) {
+        if (prescription.getPatient().getId() != userId) {
             throw new AccessDeniedException("You do not have permission to delete this prescription");
         }
         if (prescription.getDoses() != null && !prescription.getDoses().isEmpty()) {
@@ -134,15 +152,27 @@ public class PrescriptionServices implements IPrescriptionServices {
 
         if (prescriptionDto.getMedication() != null && prescriptionDto.getMedication().getDenomination() != null) {
             String denomination = prescriptionDto.getMedication().getDenomination();
-            Optional<Medication> medicationOpt = iMedicationRepository.findOneByDenomination(denomination);
+            //Optional<Medication> medicationOpt = iMedicationRepository.findOneByDenomination(denomination);
 
-            Medication medication = medicationOpt.orElseGet(() -> {
+           /* Medication medication = medicationOpt.orElseGet(() -> {
                 Medication newMed = new Medication();
                 newMed.setDenomination(denomination);
                 return iMedicationRepository.save(newMed);
-            });
+            });*/
 
-            existingPrescription.setMedication(medication);
+            //existingPrescription.setMedication(medication);
+            Medication medication = existingPrescription.getMedication();
+
+            if (medication != null) {
+                medication.setDenomination(denomination);
+                iMedicationRepository.save(medication); // mettre à jour
+            } else {
+                // Cas où la prescription n'a pas de médicament encore associé
+                Medication newMed = new Medication();
+                newMed.setDenomination(denomination);
+                medication = iMedicationRepository.save(newMed);
+                existingPrescription.setMedication(medication);
+            }
         }
 
         if (prescriptionDto.getDoses() != null) {
@@ -169,6 +199,7 @@ public class PrescriptionServices implements IPrescriptionServices {
         }
         return iPrescriptionRepository.save(existingPrescription);
     }
+
 
 
 }

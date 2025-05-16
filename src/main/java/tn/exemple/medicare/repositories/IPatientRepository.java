@@ -6,4 +6,5 @@ import tn.exemple.medicare.entities.Patient;
 @Repository
 public interface IPatientRepository extends JpaRepository<Patient, Long> {
 
+
 }

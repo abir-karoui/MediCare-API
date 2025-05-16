@@ -13,6 +13,8 @@ public interface IPrescriptionServices {
    List<Prescription> getPrescriptions();
     Prescription getPrescriptionById(Long prescriptionId );
     void deletePrescription(Long prescriptionId);
-     Prescription updatePrescriptionPartial(Long prescriptionId, PrescriptionDto prescriptionDto) ;
+
+    Prescription updatePrescriptionPartial(Long prescriptionId, PrescriptionDto prescriptionDto) ;
+
 
     }

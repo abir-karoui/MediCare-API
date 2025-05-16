@@ -46,10 +46,11 @@ public class Notification {
     @OnDelete(action = OnDeleteAction.SET_NULL)
     private Prescription prescription;
 
-   @ManyToOne(fetch = FetchType.LAZY)
-   @JsonIgnore
-   @JoinColumn(name = "invitation_id", nullable = true)
-   @OnDelete(action = OnDeleteAction.SET_NULL)
-   private Invitation invitation;
+   // @ManyToOne(fetch = FetchType.LAZY)
+   @ManyToOne
+    @JsonIgnore
+    @JoinColumn(name = "invitation_id", nullable = true)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    private Invitation invitation;
 
 }

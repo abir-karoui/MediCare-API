@@ -1,19 +1,157 @@
 package tn.exemple.medicare.services.impl;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import tn.exemple.medicare.configs.AuthService;
 import tn.exemple.medicare.entities.Doctor;
-import tn.exemple.medicare.repositories.IDoctorRepository;
+import tn.exemple.medicare.entities.Patient;
+import tn.exemple.medicare.entities.auth.User;
+import tn.exemple.medicare.entities.dto.PrescriptionDto;
+import tn.exemple.medicare.entities.prescription.Dose;
+import tn.exemple.medicare.entities.prescription.Medication;
+import tn.exemple.medicare.entities.prescription.Prescription;
+import tn.exemple.medicare.enums.TypeRole;
+import tn.exemple.medicare.mappers.PrescriptionMapper;
+import tn.exemple.medicare.repositories.*;
 import tn.exemple.medicare.services.IDoctor;
+import tn.exemple.medicare.services.INotificationServices;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
 public class DoctorServices implements IDoctor {
-    @Autowired
-    private IDoctorRepository iDoctorRepository;
+
+    private final  IDoctorRepository iDoctorRepository;
+    private final IPatientRepository iPatientRepository;
+    private final IPrescriptionRepository iPrescriptionRepository;
+    private final IDoseRepository iDoseRepository;
+    private final MedicationServices medicationServices;
+    private final IMedicationRepository iMedicationRepository;
+    private  final PrescriptionMapper prescriptionMapper;
+    private  final AuthService authService;
+    private  final NotificationRepository notificationRepository;
+    private  final InvitationServices invitationServices;
+    private final INotificationServices iNotificationServices;
+
     @Override
-    public Doctor addDoctor(Doctor doctor) {
-        return iDoctorRepository.save(doctor);
+    public Prescription createPrescriptionForPatient(Long patientId, PrescriptionDto prescriptionDto) {
+
+        Long doctorId = authService.getAuthenticatedUserId();
+        Doctor doctor = iDoctorRepository.findById(doctorId)
+                .orElseThrow(() -> new EntityNotFoundException("User with ID: '" + doctorId + "' not found"));
+        if (!doctor.getRole().equals(TypeRole.DOCTOR)) {
+            throw new IllegalStateException("Only doctors can create prescriptions.");
+        }
+        Patient patient = iPatientRepository.findById(patientId)
+                .orElseThrow(() -> new EntityNotFoundException("Patient with ID: '" + patientId + "' not found"));
+
+
+        if (!invitationServices.areUsersConnected(patientId)) {
+            throw new IllegalStateException("You are not connected to this patient. Cannot create prescription.");
+        }
+
+        Medication medication = iMedicationRepository.findByDenomination(prescriptionDto.getMedication().getDenomination());
+        if (medication == null) {
+            List<Medication> medications = medicationServices.searchMedicationsByName(
+                    prescriptionDto.getMedication().getDenomination()
+            ).block();
+
+            if (medications == null || medications.isEmpty()) {
+                medication = new Medication();
+                medication.setDenomination(prescriptionDto.getMedication().getDenomination());
+            } else {
+                medication = medications.get(0);
+            }
+
+            medication = iMedicationRepository.save(medication);
+        }
+        Prescription prescription = prescriptionMapper.toEntity(prescriptionDto);
+        prescription.setPatient(patient);
+        prescription.setDoctor(doctor);
+        prescription.setMedication(medication);
+
+        if (prescriptionDto.getDoses() != null && !prescriptionDto.getDoses().isEmpty()) {
+            List<Dose> doses = prescriptionDto.getDoses().stream()
+                    .map(doseRequest -> {
+                        Dose dose = new Dose();
+                        dose.setTimeToTake(doseRequest.getTimeToTake());
+                        dose.setQuantity(doseRequest.getQuantity());
+                        dose.setPrescription(prescription);
+                        return dose;
+                    })
+                    .collect(Collectors.toList());
+            prescription.setDoses(doses);
+        }
+
+        Prescription savedPrescription = iPrescriptionRepository.save(prescription);
+        iNotificationServices.sendPrescriptionNotificationToPatient(patient, doctor, savedPrescription);
+
+        return savedPrescription;
+
+
     }
+
+    @Override
+    public List<Prescription> getPrescriptions(Long patientId) {
+    Long doctorId = authService.getAuthenticatedUserId();
+    Doctor doctor = iDoctorRepository.findById(doctorId)
+            .orElseThrow(() -> new EntityNotFoundException("Doctor with ID: " + doctorId + " not found"));
+
+    //List<Prescription> prescriptions = iPrescriptionRepository.findByDoctorId(doctorId);
+       List<Prescription> prescriptions = iPrescriptionRepository.findByDoctorIdAndPatientIdOrderByCreatedAtDesc(doctorId, patientId);
+
+       return prescriptions;
+    }
+
+   /* @Override
+    public List<Prescription> getPrescriptionsNotCreatedByDoctor() {
+    Long doctorId = authService.getAuthenticatedUserId();
+    Doctor doctor = iDoctorRepository.findById(doctorId)
+            .orElseThrow(() -> new EntityNotFoundException("Doctor with ID: " + doctorId + " not found"));
+    return iPrescriptionRepository.findPrescriptionsNotCreatedByDoctorIncludingNull(doctorId);
+}
+*/
+   @Override
+   public List<Prescription> getPrescriptionsNotCreatedByDoctor(Long patientId) {
+       Long doctorId = authService.getAuthenticatedUserId();
+
+       Doctor doctor = iDoctorRepository.findById(doctorId)
+               .orElseThrow(() -> new EntityNotFoundException("Doctor with ID: " + doctorId + " not found"));
+
+       return iPrescriptionRepository.findPrescriptionsByPatientExcludingCurrentDoctor(patientId, doctorId);
+   }
+
+    @Override
+   @Transactional
+   public void deletePrescription(Long prescriptionId) {
+       long doctorId = authService.getAuthenticatedUserId();
+
+       Doctor doctor = iDoctorRepository.findById(doctorId)
+               .orElseThrow(() -> new EntityNotFoundException("Doctor with ID: " + doctorId + " not found"));
+
+       Prescription prescription = iPrescriptionRepository.findById(prescriptionId)
+               .orElseThrow(() -> new EntityNotFoundException("Prescription with ID: " + prescriptionId + " not found"));
+
+       if (prescription.getDoctor() == null
+               || prescription.getDoctor().getId() != doctorId) {
+           throw new AccessDeniedException("You can only delete prescriptions you have created.");
+       }
+
+       if (prescription.getDoses() != null && !prescription.getDoses().isEmpty()) {
+           iDoseRepository.deleteAll(prescription.getDoses());
+       }
+
+       notificationRepository.nullifyPrescriptionReferences(prescriptionId);
+       iPrescriptionRepository.delete(prescription);
+   }
+
+
+
+
 }

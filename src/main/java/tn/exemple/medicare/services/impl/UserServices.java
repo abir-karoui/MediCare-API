@@ -23,7 +23,9 @@ import tn.exemple.medicare.controllers.authcontrollers.ChangePasswordRequest;
 import tn.exemple.medicare.entities.*;
 import tn.exemple.medicare.entities.auth.*;
 import tn.exemple.medicare.entities.dto.UserDto;
+import tn.exemple.medicare.entities.invitation.Invitation;
 import tn.exemple.medicare.enums.TypeCode;
+import tn.exemple.medicare.enums.TypeGender;
 import tn.exemple.medicare.enums.TypeRole;
 import tn.exemple.medicare.exceptions.BusinessErrorCode;
 import tn.exemple.medicare.exceptions.BusinessException;
@@ -270,14 +272,7 @@ public class UserServices implements IUserSevices {
                 .map(UserMapper::toDto)
                 .collect(Collectors.toList());
     }
-    @Override
-    public User UpdateUser(Long id, User user) {
-        if (!iUserRepository.existsById(id)) {
-            throw new EntityNotFoundException("User with Id: '" +id + "' not found");
-        }
-        user.setId(id);
-        return iUserRepository.save(user) ;
-    }
+
 
     @Transactional
     @Override
@@ -298,6 +293,8 @@ public class UserServices implements IUserSevices {
         }
         iUserRepository.deleteById(userId);
     }
+
+
     @Override
     public void deleteAllUser() {
         iUserRepository.deleteAll();
@@ -366,49 +363,114 @@ public class UserServices implements IUserSevices {
         User user = iUserRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User with ID " + userId + " not found"));
         return UserMapper.toDto(user); }
+    @Override
+    public AuthenticationResponse updateProfile(Map<String, Object> userParams, MultipartFile file) throws Exception {
 
-}
+        // Récupérer l'ID de l'utilisateur authentifié
+        Long userId = authService.getAuthenticatedUserId();
+        // Rechercher l'utilisateur dans la base de données
+        User user = iUserRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User with Id: '" + userId + "' not found"));
 
-
-
-    /*public void resetPassword(String code, String newPassword) {
-        Codes codes = codeRepository.findByCode(code)
-                .orElseThrow(() -> new RuntimeException("Invalid Token"));
-        if (codes.getExpiredAt().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("The token has expired");
-        }
-        User user = codes.getUser();
-        user.setPassword(passwordEncoder.encode(newPassword));
-        iUserRepository.save(user);
-        codeRepository.delete(codes);
-    }*/
-
-
-/*@Override
-
-    public AuthenticationResponse  singUp(User user) throws MessagingException {
-        Optional<User> existingUser = iUserRepository.findByEmail(user.getEmail());
-        if (existingUser.isPresent()) {
-            throw new IllegalArgumentException("Email already exists");
-        }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setEnabled(false);
-        User savedUser;
-        if (user.getRole() == TypeRole.DOCTOR) {
-            Doctor doctor = (Doctor) user;
-            savedUser = iUserRepository.save(doctor);
-        } else if (user.getRole() == TypeRole.PATIENT) {
-            Patient patient = (Patient) user;
-
-            savedUser = iUserRepository.save(patient);
-        } else {
-            throw new IllegalArgumentException("Invalid user role");
+        // Mise à jour du prénom si présent et non vide
+        if (userParams.containsKey("firstname")) {
+            String firstname = (String) userParams.get("firstname");
+            if (firstname != null && !firstname.trim().isEmpty()) {
+                user.setFirstname(firstname);
+            }
         }
 
-        var jwtToken = jwtService.generateToken(savedUser);
-        var refreshToken = jwtService.generateRefreshToken(savedUser);
-        saveRefreshToken(savedUser, refreshToken);
-        sendValidationEmail(savedUser);
+        // Mise à jour du nom si présent et non vide
+        if (userParams.containsKey("lastname")) {
+            String lastname = (String) userParams.get("lastname");
+            if (lastname != null && !lastname.trim().isEmpty()) {
+                user.setLastname(lastname);
+            }
+        }
+
+        // Mise à jour de l'email si présent et non vide, et vérification si email existe déjà
+        if (userParams.containsKey("email")) {
+            String newEmail = (String) userParams.get("email");
+            if (newEmail != null && !newEmail.trim().isEmpty() && !newEmail.equals(user.getEmail())) {
+                Optional<User> existingUserWithEmail = iUserRepository.findByEmail(newEmail);
+                if (existingUserWithEmail.isPresent() && existingUserWithEmail.get().getId() != user.getId()) {
+                    throw new BusinessException(BusinessErrorCode.EMAIL_ALREADY_EXISTS);
+                }
+                user.setEmail(newEmail);
+            }
+        }
+
+        // Mise à jour du téléphone si présent et non vide
+        if (userParams.containsKey("phone")) {
+            String phone = (String) userParams.get("phone");
+            if (phone != null && !phone.trim().isEmpty()) {
+                user.setPhone(phone);
+            }
+        }
+
+        // Mise à jour de l'adresse si présente et non vide
+        if (userParams.containsKey("address")) {
+            String address = (String) userParams.get("address");
+            if (address != null && !address.trim().isEmpty()) {
+                user.setAddress(address);
+            }
+        }
+
+        // Mise à jour du genre si présent et non vide
+        if (userParams.containsKey("gender")) {
+            String genderStr = (String) userParams.get("gender");
+            if (genderStr != null && !genderStr.trim().isEmpty()) {
+                try {
+                    TypeGender gender = TypeGender.valueOf(genderStr.toUpperCase());
+                    user.setGender(gender);
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException("Invalid gender value: " + genderStr);
+                }
+            }
+        }
+
+        // Mise à jour de la spécialité pour les docteurs
+        if (user.getRole() == TypeRole.DOCTOR && user instanceof Doctor doctor) {
+            if (userParams.containsKey("speciality")) {
+                String speciality = (String) userParams.get("speciality");
+                if (speciality != null && !speciality.trim().isEmpty()) {
+                    doctor.setSpeciality(speciality);
+                }
+            }
+        }
+
+        // Mise à jour de l'âge pour les patients
+        if (user.getRole() == TypeRole.PATIENT && user instanceof Patient patient) {
+            if (userParams.containsKey("age")) {
+                String age = (String) userParams.get("age");
+                if (age != null && !age.trim().isEmpty()) {
+                    patient.setAge(age);
+                }
+            }
+        }
+
+        // Traitement du fichier photo si présent
+        if (file != null && !file.isEmpty()) {
+            String pictureUrl = fileUpload.uploadImage(file);
+            user.setPhoto(pictureUrl);
+        }
+
+        // Sauvegarde de l'utilisateur mis à jour
+        User updatedUser = iUserRepository.save(user);
+
+        // Création des claims pour le JWT
+        var claims = new HashMap<String, Object>();
+        claims.put("fullName", updatedUser.fullName());
+        claims.put("userId", updatedUser.getId());
+
+        // Génération du token d'accès et du refresh token
+        var jwtToken = jwtService.generateToken(claims, updatedUser);
+        var refreshToken = jwtService.generateRefreshToken(updatedUser);
+
+        // Sauvegarde du refresh token
+        saveRefreshToken(updatedUser, refreshToken);
+
+        // Retourner la réponse avec les tokens
         return AuthenticationResponse.builder()
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
@@ -416,21 +478,6 @@ public class UserServices implements IUserSevices {
     }
 
 
-   /* public List<User> getUsersByRole(TypeRole role) {
-        return  iUserRepository.findAllByRole(role);
-    }*/
 
-    /*public List<User> getUsersByRole() {
-        TypeRole role = authService.getAuthenticatedUserRole();
-      if(role == TypeRole.DOCTOR){
-          return iUserRepository.findAllByRole(TypeRole.PATIENT);
-      } else if (role == TypeRole.PATIENT) {
+}
 
-          return iUserRepository.findAllByRole(TypeRole.DOCTOR);
-
-      }
-
-        return  List.of();
-    }
-
-*/

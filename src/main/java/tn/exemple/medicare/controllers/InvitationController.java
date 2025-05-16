@@ -3,9 +3,11 @@ package tn.exemple.medicare.controllers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tn.exemple.medicare.entities.dto.UserDto;
 import tn.exemple.medicare.entities.invitation.Invitation;
 import tn.exemple.medicare.services.IInvitation;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -46,5 +48,15 @@ public class InvitationController {
                 "receiverId", invitation.getReceiver().getId(),
                 "status", invitation.getStatus().name()
         ));
+    }
+    @GetMapping("/connected-users")
+    public ResponseEntity<List<UserDto>> getConnectedUsers() {
+        List<UserDto> connectedUsers = invitationService.getConnectedUsers();
+        return ResponseEntity.ok(connectedUsers);
+    }
+    @GetMapping("/is-connected/{userId}")
+    public ResponseEntity<Boolean> areUsersConnected(@PathVariable Long userId) {
+        boolean connected = invitationService.areUsersConnected(userId);
+        return ResponseEntity.ok(connected);
     }
 }

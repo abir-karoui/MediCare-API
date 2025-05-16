@@ -42,4 +42,5 @@ public class PrescriptionController {
         Prescription updatedPrescription = prescriptionServices.updatePrescriptionPartial(id, prescriptionDto);
         return ResponseEntity.ok(updatedPrescription);
     }
+
 }

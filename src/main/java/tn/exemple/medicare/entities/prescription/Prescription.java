@@ -7,9 +7,8 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
-import tn.exemple.medicare.entities.auth.User;
-import tn.exemple.medicare.entities.prescription.Dose;
-import tn.exemple.medicare.entities.prescription.Medication;
+import tn.exemple.medicare.entities.Doctor;
+import tn.exemple.medicare.entities.Patient;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,10 +32,16 @@ public class Prescription {
     @ManyToOne
     @JoinColumn(name = "medication_id")
     private Medication medication;
+
     @ManyToOne
     @JsonBackReference
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "Patient_id")
+    //private User user;
+    private Patient patient;
+    @ManyToOne
+    @JsonBackReference
+    @JoinColumn(name = "Doctor_id")
+    private Doctor doctor;
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

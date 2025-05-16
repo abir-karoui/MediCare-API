@@ -45,7 +45,7 @@ public class MedicationReminderScheduler {
         doseRepository.resetAllNotifiedDoses();
     }
     public void sendDoseNotification( Dose dose) {
-        User patient = dose.getPrescription().getUser();
+        User patient = dose.getPrescription().getPatient();
         String body = String.format("It's time to take %s at %s, with a dosage of %s.",
                 dose.getPrescription().getMedication().getDenomination(),
                 dose.getTimeToTake().format(DateTimeFormatter.ofPattern("HH:mm")),
