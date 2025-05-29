@@ -10,8 +10,10 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import tn.exemple.medicare.entities.invitation.Invitation;
 import tn.exemple.medicare.entities.notification.Notification;
+import tn.exemple.medicare.entities.prescription.MedicationIntake;
 import tn.exemple.medicare.entities.prescription.Prescription;
 
+import java.time.LocalTime;
 import java.util.List;
 
 @Repository

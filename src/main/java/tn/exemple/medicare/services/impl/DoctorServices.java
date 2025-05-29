@@ -13,6 +13,7 @@ import tn.exemple.medicare.entities.auth.User;
 import tn.exemple.medicare.entities.dto.PrescriptionDto;
 import tn.exemple.medicare.entities.prescription.Dose;
 import tn.exemple.medicare.entities.prescription.Medication;
+import tn.exemple.medicare.entities.prescription.MedicationIntake;
 import tn.exemple.medicare.entities.prescription.Prescription;
 import tn.exemple.medicare.enums.TypeRole;
 import tn.exemple.medicare.mappers.PrescriptionMapper;
@@ -20,6 +21,7 @@ import tn.exemple.medicare.repositories.*;
 import tn.exemple.medicare.services.IDoctor;
 import tn.exemple.medicare.services.INotificationServices;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,6 +40,7 @@ public class DoctorServices implements IDoctor {
     private  final NotificationRepository notificationRepository;
     private  final InvitationServices invitationServices;
     private final INotificationServices iNotificationServices;
+    private  final  IMedicationIntakeRepository iMedicationIntakeRepository;
 
     @Override
     public Prescription createPrescriptionForPatient(Long patientId, PrescriptionDto prescriptionDto) {
@@ -90,8 +93,24 @@ public class DoctorServices implements IDoctor {
         }
 
         Prescription savedPrescription = iPrescriptionRepository.save(prescription);
+
         iNotificationServices.sendPrescriptionNotificationToPatient(patient, doctor, savedPrescription);
 
+        LocalDate today = LocalDate.now();
+        for (Dose dose : savedPrescription.getDoses()) {
+            MedicationIntake intake = MedicationIntake.builder()
+                    .date(today)
+                    .timeToTake(dose.getTimeToTake())
+                    .quantity(dose.getQuantity())
+                    .medicationName(medication.getDenomination())
+                    .prescription(savedPrescription)
+                    .patient(patient)
+                    .taken(false)
+                    .notified(false)
+                    .build();
+
+            iMedicationIntakeRepository.save(intake);
+        }
         return savedPrescription;
 
 
@@ -109,14 +128,7 @@ public class DoctorServices implements IDoctor {
        return prescriptions;
     }
 
-   /* @Override
-    public List<Prescription> getPrescriptionsNotCreatedByDoctor() {
-    Long doctorId = authService.getAuthenticatedUserId();
-    Doctor doctor = iDoctorRepository.findById(doctorId)
-            .orElseThrow(() -> new EntityNotFoundException("Doctor with ID: " + doctorId + " not found"));
-    return iPrescriptionRepository.findPrescriptionsNotCreatedByDoctorIncludingNull(doctorId);
-}
-*/
+
    @Override
    public List<Prescription> getPrescriptionsNotCreatedByDoctor(Long patientId) {
        Long doctorId = authService.getAuthenticatedUserId();

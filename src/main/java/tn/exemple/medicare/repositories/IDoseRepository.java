@@ -14,7 +14,7 @@ import java.util.List;
 @Repository
 public interface IDoseRepository extends JpaRepository<Dose, Long> {
 
-    @Query("SELECT d FROM Dose d WHERE " +
+   /* @Query("SELECT d FROM Dose d WHERE " +
             "d.timeToTake BETWEEN :start AND :end AND " +
             "d.notified = false AND " +
             "d.prescription.patient.fcmToken IS NOT NULL")
@@ -24,5 +24,5 @@ public interface IDoseRepository extends JpaRepository<Dose, Long> {
     );
     @Modifying
     @Query("UPDATE Dose d SET d.notified = false")
-    void resetAllNotifiedDoses();
+    void resetAllNotifiedDoses();*/
 }

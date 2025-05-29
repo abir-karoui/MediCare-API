@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.stream.Stream;
 
 
 @Entity
@@ -25,7 +26,6 @@ public class Medication implements Serializable {
     @OneToMany(mappedBy = "medication")
     @JsonBackReference("medication-prescription")
     private List<Prescription> prescriptions;
-
 
 }
 

@@ -29,5 +29,6 @@ public class Dose {
     @JsonBackReference
     @JoinColumn(name = "prescription_id", nullable = false)
     private Prescription prescription;
-    private boolean notified = false;
+
+    //private boolean notified = false;
 }

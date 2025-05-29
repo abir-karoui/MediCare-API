@@ -11,6 +11,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import tn.exemple.medicare.entities.auth.User;
 import tn.exemple.medicare.entities.invitation.Invitation;
 import tn.exemple.medicare.entities.prescription.Dose;
+import tn.exemple.medicare.entities.prescription.MedicationIntake;
 import tn.exemple.medicare.entities.prescription.Prescription;
 import tn.exemple.medicare.enums.NotificationType;
 
@@ -36,9 +37,7 @@ public class Notification {
     private NotificationType type;
     @ManyToOne
     @JsonIgnore
-
     @JsonBackReference
-
     private User user;
     @ManyToOne
     @JsonIgnore
@@ -47,10 +46,18 @@ public class Notification {
     private Prescription prescription;
 
    // @ManyToOne(fetch = FetchType.LAZY)
-   @ManyToOne
+    @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "invitation_id", nullable = true)
     @OnDelete(action = OnDeleteAction.SET_NULL)
     private Invitation invitation;
+
+    @ManyToOne
+     @JsonIgnore
+    @JoinColumn(name = "medicationIntake_id", nullable = true)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    private MedicationIntake medicationIntake;
+
+
 
 }

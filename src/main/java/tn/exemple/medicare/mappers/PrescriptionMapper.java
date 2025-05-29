@@ -41,37 +41,6 @@ public class PrescriptionMapper {
 
         return dto;
     }
-
-        // convertir le DTO en entité
-        /*public Prescription toEntity(PrescriptionDto prescriptionDto) {
-            Prescription prescription = new Prescription();
-
-            // Convertir le DTO en entité
-            prescription.setDurationDays(prescriptionDto.getDurationDays());
-            prescription.setStockActuel(prescriptionDto.getStockActuel());
-
-            // Mapper Medication
-            Medication medication = new Medication();
-
-            medication.setDenomination(prescriptionDto.getMedication().getDenomination());
-            prescription.setMedication(medication);
-
-            // Mapper les Doses
-            if (prescriptionDto.getDoses() != null) {
-                List<Dose> doses = prescriptionDto.getDoses().stream()
-                        .map(doseDto -> {
-                            Dose dose = new Dose();
-
-                            dose.setTimeToTake(doseDto.getTimeToTake());
-                            dose.setQuantity(doseDto.getQuantity());
-                            return dose;
-                        })
-                        .collect(Collectors.toList());
-                prescription.setDoses(doses);
-            }
-
-            return prescription;
-        }*/
         public Prescription toEntity(PrescriptionDto prescriptionDto) {
             Prescription prescription = new Prescription();
 

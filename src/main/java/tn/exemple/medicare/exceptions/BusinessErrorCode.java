@@ -10,6 +10,7 @@ public enum BusinessErrorCode {
 
     NO_CODE(0, NOT_IMPLEMENTED, "NO code" ),
     NOT_FOUND(3000, NOT_IMPLEMENTED, "User not found" ),
+
     INCORRECT_CURRENT_PASSWORD(1000, BAD_REQUEST, "Current password is incorrect"),
     NEW_PASSWORD_DOSES_NOT_MATCH(1001, BAD_REQUEST, "New password does not match"),
     INCORRECT_PASSWORD(1002, BAD_REQUEST, "Password is incorrect"),
@@ -22,10 +23,13 @@ public enum BusinessErrorCode {
     INVITATION_ALREADY_SENT(4000, CONFLICT, "Invitation has already been sent to this user"),
     MEDICAL_CARD_NOT_VERIFIED(5000,BAD_REQUEST,"Your medical card has not yet been verified by the administrator."),
 
-    MEDICAL_CARD_ALREADY_VERIFIED(5001,BAD_REQUEST,"The medical card has already been verified.")
+    MEDICAL_CARD_ALREADY_VERIFIED(5001,BAD_REQUEST,"The medical card has already been verified."),
+    MEDICAL_RECORD_NOT_FOUND(6000, HttpStatus.NOT_FOUND, "You have not yet created your medical record"),
+    DISEASE_NAME_ALREADY_EXISTS(7000, CONFLICT, "A disease with this name already exists")
 
 
-    ;
+
+            ;
     @Getter
     private final int code;
     @Getter

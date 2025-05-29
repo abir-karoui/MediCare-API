@@ -21,4 +21,5 @@ public class NotificationResponse {
     private LocalDateTime sentAt;
     private NotificationType type;
     private Long idInvitation;
+    private Long idMedicationIntake;
 }

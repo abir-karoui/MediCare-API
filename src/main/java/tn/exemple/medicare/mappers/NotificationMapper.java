@@ -14,6 +14,7 @@ public class NotificationMapper {
                 .sentAt(notification.getSentAt())
                 .type(notification.getType())
                 .idInvitation(notification.getInvitation() != null ? notification.getInvitation().getId() : null)
+                .idMedicationIntake(notification.getMedicationIntake() != null ? notification.getMedicationIntake().getId() : null)
                 .build();
     }
 }

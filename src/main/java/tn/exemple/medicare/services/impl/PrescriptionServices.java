@@ -194,7 +194,7 @@ public class PrescriptionServices implements IPrescriptionServices {
                 Dose existingDose = existingDoses.get(i);
                 existingDose.setTimeToTake(doseDto.getTimeToTake());
                 existingDose.setQuantity(doseDto.getQuantity());
-                existingDose.setNotified(false);
+                //existingDose.setNotified(false);
             }
         }
         return iPrescriptionRepository.save(existingPrescription);
