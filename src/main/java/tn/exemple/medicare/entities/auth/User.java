@@ -11,6 +11,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import tn.exemple.medicare.entities.invitation.Invitation;
 import tn.exemple.medicare.entities.notification.Notification;
 import tn.exemple.medicare.entities.prescription.Prescription;
 import tn.exemple.medicare.enums.TypeGender;
@@ -168,8 +169,14 @@ public  class User implements Serializable , UserDetails , Principal {
 
 
     @JsonIgnore
-    @JsonManagedReference
+    @JsonManagedReference("user-notification")
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Notification> notifications;
+
+    @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Invitation> sentInvitations;
+
+    @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Invitation> receivedInvitations ;
 
 }

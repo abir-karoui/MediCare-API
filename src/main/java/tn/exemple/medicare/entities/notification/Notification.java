@@ -37,7 +37,7 @@ public class Notification {
     private NotificationType type;
     @ManyToOne
     @JsonIgnore
-    @JsonBackReference
+    @JsonBackReference("user-notification")
     private User user;
     @ManyToOne
     @JsonIgnore
@@ -53,7 +53,7 @@ public class Notification {
     private Invitation invitation;
 
     @ManyToOne
-     @JsonIgnore
+    @JsonIgnore
     @JoinColumn(name = "medicationIntake_id", nullable = true)
     @OnDelete(action = OnDeleteAction.SET_NULL)
     private MedicationIntake medicationIntake;

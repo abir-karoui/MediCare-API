@@ -1,5 +1,6 @@
 package tn.exemple.medicare.entities.medicalRecord;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,6 +26,7 @@ public class Operation {
 
     @ManyToOne
     @JoinColumn(name = "medical_record_id")
+    @JsonBackReference("operations-medicalRecord")
     private MedicalRecord medicalRecord;
 
 

@@ -2,6 +2,7 @@ package tn.exemple.medicare.entities.prescription;
 
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,11 +38,12 @@ public class MedicationIntake {
 
     @ManyToOne
     @JoinColumn(name = "prescription_id")
-    @JsonBackReference
+    @JsonBackReference("medicationintake")
     private Prescription prescription;
 
     @ManyToOne
     @JoinColumn(name = "patient_id")
-    @JsonBackReference
+    @JsonBackReference ("patient-medicationIntakes")
+
     private Patient patient;
 }

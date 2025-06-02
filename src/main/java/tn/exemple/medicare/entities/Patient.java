@@ -2,11 +2,11 @@ package tn.exemple.medicare.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import tn.exemple.medicare.entities.auth.User;
+import tn.exemple.medicare.entities.medicalRecord.MedicalRecord;
+import tn.exemple.medicare.entities.prescription.Dose;
+import tn.exemple.medicare.entities.prescription.MedicationIntake;
 import tn.exemple.medicare.entities.prescription.Prescription;
 import tn.exemple.medicare.enums.TypeRole;
 import java.time.LocalDate;
@@ -14,10 +14,8 @@ import java.util.List;
 import java.util.Set;
 
 
-@Getter
-@Setter
-@Entity
 @AllArgsConstructor
+@Entity
 @Data
 @Table(name = "Patient")
 public class Patient extends User {
@@ -43,9 +41,17 @@ public class Patient extends User {
     Set<Diseases> diseases ;
 
     @JsonIgnore
-    @JsonManagedReference
+    @JsonManagedReference("patient-prescription")
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Prescription> prescriptions;
 
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("patient-medicationIntakes")
+    private List<MedicationIntake> medicationIntakes;
+
+   @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("patient-medicalRecord")
+   @EqualsAndHashCode.Exclude
+    private MedicalRecord medicalRecord;
 }
 

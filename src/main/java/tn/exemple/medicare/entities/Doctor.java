@@ -34,7 +34,7 @@ public class Doctor extends User {
     @JsonIgnore
     Set<Patient> patients;
     @JsonIgnore
-    @JsonManagedReference
+    @JsonManagedReference("doctor-prescription")
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Prescription> prescriptions;
 

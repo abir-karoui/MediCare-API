@@ -1,10 +1,12 @@
 package tn.exemple.medicare.entities.medicalRecord;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.data.annotation.CreatedDate;
@@ -36,10 +38,11 @@ public class MedicalRecord {
     private List<String> chronicDiseases;
     @OneToOne
     @JoinColumn(name = "patient_id", unique = true)
+    @JsonBackReference("patient-medicalRecord")
+    @EqualsAndHashCode.Exclude
     private Patient patient;
     @OneToMany(mappedBy = "medicalRecord", cascade = CascadeType.ALL, orphanRemoval = true)
-
-   // @JsonManagedReference
+    @JsonManagedReference ("operations-medicalRecord")
     private List<Operation> operations;
 
 }
