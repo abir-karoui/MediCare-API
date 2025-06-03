@@ -23,13 +23,13 @@ import java.util.stream.Collectors;
 
 public class JwtService { // service responsable a gener tokne , decode , extract info from token validate token ect kol chy tebaa token
     @Value("${jwt.secret-key}")
-    private  String secretKey;
+    String secretKey;
 
     @Value("${jwt.expiration}")
-    private  long jwtExpiration;
+    long jwtExpiration;
 
     @Value("${jwt.refresh-token.expiration}")
-    private  long refreshExpiration;
+    long refreshExpiration;
     public String extractUsername(String token) {
         return  extractClaim(token, Claims::getSubject);
     }
