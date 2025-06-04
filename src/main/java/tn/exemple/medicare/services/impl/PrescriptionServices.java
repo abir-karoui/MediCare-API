@@ -11,13 +11,17 @@ import tn.exemple.medicare.entities.Patient;
 import tn.exemple.medicare.entities.auth.User;
 import tn.exemple.medicare.entities.prescription.Dose;
 import tn.exemple.medicare.entities.prescription.Medication;
+import tn.exemple.medicare.entities.prescription.MedicationIntake;
 import tn.exemple.medicare.entities.prescription.Prescription;
 import tn.exemple.medicare.entities.dto.PrescriptionDto;
 import tn.exemple.medicare.enums.TypeRole;
+import tn.exemple.medicare.exceptions.BusinessErrorCode;
+import tn.exemple.medicare.exceptions.BusinessException;
 import tn.exemple.medicare.mappers.PrescriptionMapper;
 import tn.exemple.medicare.repositories.*;
 import tn.exemple.medicare.services.IPrescriptionServices;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -38,6 +42,8 @@ public class PrescriptionServices implements IPrescriptionServices {
     private  final NotificationRepository notificationRepository;
     private  final InvitationServices invitationServices;
 
+    private  final  IMedicationIntakeRepository iMedicationIntakeRepository;
+
     public Prescription createPrescription(PrescriptionDto prescriptionDto) {
 
         Long userId = authService.getAuthenticatedUserId();
@@ -57,6 +63,13 @@ public class PrescriptionServices implements IPrescriptionServices {
                 medication = iMedicationRepository.save(medication);
             }
         }
+        boolean exists = iPrescriptionRepository
+                .existsByPatientAndMedicationDenomination(patient, prescriptionDto.getMedication().getDenomination());
+
+        if (exists) {
+            throw new BusinessException(BusinessErrorCode.PRESCRIPTION_ALREADY_EXISTS);
+        }
+
 
         Prescription prescription = prescriptionMapper.toEntity(prescriptionDto);
         prescription.setPatient(patient);
@@ -75,8 +88,24 @@ public class PrescriptionServices implements IPrescriptionServices {
                     .collect(Collectors.toList());
             prescription.setDoses(doses);
         }
+        Prescription savedPrescription = iPrescriptionRepository.save(prescription);
+        LocalDate today = LocalDate.now();
+        for (Dose dose : prescription.getDoses()) {
+            MedicationIntake intake = MedicationIntake.builder()
+                    .date(today)
+                    .timeToTake(dose.getTimeToTake())
+                    .quantity(dose.getQuantity())
+                    .medicationName(prescription.getMedication().getDenomination())
+                    .prescription(prescription)
+                    .patient(prescription.getPatient())
+                    .taken(false)
+                    .notified(false)
+                    .build();
 
-        return iPrescriptionRepository.save(prescription);
+            iMedicationIntakeRepository.save(intake);
+        }
+
+        return savedPrescription;
     }
 
     @Override

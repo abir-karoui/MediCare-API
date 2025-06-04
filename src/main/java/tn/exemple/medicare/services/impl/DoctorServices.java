@@ -16,6 +16,8 @@ import tn.exemple.medicare.entities.prescription.Medication;
 import tn.exemple.medicare.entities.prescription.MedicationIntake;
 import tn.exemple.medicare.entities.prescription.Prescription;
 import tn.exemple.medicare.enums.TypeRole;
+import tn.exemple.medicare.exceptions.BusinessErrorCode;
+import tn.exemple.medicare.exceptions.BusinessException;
 import tn.exemple.medicare.mappers.PrescriptionMapper;
 import tn.exemple.medicare.repositories.*;
 import tn.exemple.medicare.services.IDoctor;
@@ -73,6 +75,12 @@ public class DoctorServices implements IDoctor {
             }
 
             medication = iMedicationRepository.save(medication);
+        }
+        boolean exists = iPrescriptionRepository
+                .existsByPatientAndMedicationDenomination(patient, prescriptionDto.getMedication().getDenomination());
+
+        if (exists) {
+            throw new BusinessException(BusinessErrorCode.PRESCRIPTION_ALREADY_EXISTS);
         }
         Prescription prescription = prescriptionMapper.toEntity(prescriptionDto);
         prescription.setPatient(patient);

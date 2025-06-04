@@ -1,5 +1,6 @@
 package tn.exemple.medicare.entities.invitation;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -21,10 +22,12 @@ public class Invitation {
     private Long id;
     @ManyToOne
     @JoinColumn(name = "sender_id", nullable = false)
+    @JsonBackReference("sender-invitation")
     private User sender;
 
     @ManyToOne
     @JoinColumn(name = "receiver_id", nullable = false)
+    @JsonBackReference("receiver-invitation")
     private User receiver;
 
     @Enumerated(EnumType.STRING)

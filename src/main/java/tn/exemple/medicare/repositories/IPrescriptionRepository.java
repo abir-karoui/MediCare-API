@@ -4,7 +4,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import tn.exemple.medicare.entities.Patient;
 import tn.exemple.medicare.entities.auth.User;
+import tn.exemple.medicare.entities.prescription.Medication;
 import tn.exemple.medicare.entities.prescription.Prescription;
 
 import java.time.LocalTime;
@@ -14,6 +16,12 @@ import java.util.Optional;
 @Repository
 public interface IPrescriptionRepository  extends JpaRepository<Prescription, Long> {
     //List<Prescription> findPrescriptionByUser(Long userId);
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END " +
+            "FROM Prescription p " +
+            "WHERE p.patient = :patient AND p.medication.denomination = :denomination")
+    boolean existsByPatientAndMedicationDenomination(@Param("patient") Patient patient, @Param("denomination") String denomination);
+
+
     List<Prescription> findByPatientIdOrderByCreatedAtDesc(Long userId);
     List<Prescription> findByDoctorId(Long userId);
     Optional<Prescription> findByIdAndDoctorId(Long prescriptionId, Long doctorId);

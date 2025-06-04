@@ -170,6 +170,8 @@ public class UserServices implements IUserSevices {
                     throw new BusinessException(BusinessErrorCode.MEDICAL_CARD_NOT_VERIFIED);
                 }
             }
+
+
             var claims = new HashMap<String, Object>();
             claims.put("fullName" , user.fullName());
             claims.put("userId", user.getId());
@@ -180,7 +182,9 @@ public class UserServices implements IUserSevices {
             saveRefreshToken(user, refreshToken);
             return AuthenticationResponse.builder().accessToken(jwtToken).refreshToken(refreshToken).build();
 
-        } catch (BadCredentialsException e) {
+        } catch (DisabledException e) {
+            throw new BusinessException(BusinessErrorCode.ACCOUNT_DISABLED);
+        }catch (BadCredentialsException e) {
             throw e;
         } catch (BusinessException e) {
             throw e;

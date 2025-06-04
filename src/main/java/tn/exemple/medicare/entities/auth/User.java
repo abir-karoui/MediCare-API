@@ -174,10 +174,11 @@ public  class User implements Serializable , UserDetails , Principal {
     private List<Notification> notifications;
 
     @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, orphanRemoval = true)
-
+    @JsonManagedReference("sender-invitation")
     private List<Invitation> sentInvitations;
 
     @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("receiver-invitation")
 
     private List<Invitation> receivedInvitations ;
 

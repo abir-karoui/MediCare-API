@@ -22,10 +22,10 @@ public enum BusinessErrorCode {
     CODE_INCORRECT(3002, BAD_REQUEST, "Incorrect code, please verify your code" ),
     INVITATION_ALREADY_SENT(4000, CONFLICT, "Invitation has already been sent to this user"),
     MEDICAL_CARD_NOT_VERIFIED(5000,BAD_REQUEST,"Your medical card has not yet been verified by the administrator."),
-
     MEDICAL_CARD_ALREADY_VERIFIED(5001,BAD_REQUEST,"The medical card has already been verified."),
     MEDICAL_RECORD_NOT_FOUND(6000, HttpStatus.NOT_FOUND, "You have not yet created your medical record"),
-    DISEASE_NAME_ALREADY_EXISTS(7000, CONFLICT, "A disease with this name already exists")
+    DISEASE_NAME_ALREADY_EXISTS(7000, CONFLICT, "A disease with this name already exists"),
+    PRESCRIPTION_ALREADY_EXISTS(8000, CONFLICT, "Vous avez deja ce medicament")
 
 
 
