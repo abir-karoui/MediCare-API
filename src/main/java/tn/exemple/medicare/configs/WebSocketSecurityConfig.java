@@ -9,10 +9,7 @@ import org.springframework.security.config.annotation.web.socket.EnableWebSocket
 @Configuration
 public class WebSocketSecurityConfig extends AbstractSecurityWebSocketMessageBrokerConfigurer {
 
-    @Override
-    protected boolean sameOriginDisabled() {
-        return true;
-    }
+
 
     @Override
     protected void configureInbound(MessageSecurityMetadataSourceRegistry messages) {
@@ -28,5 +25,9 @@ public class WebSocketSecurityConfig extends AbstractSecurityWebSocketMessageBro
                 .simpSubscribeDestMatchers("/topic/**", "/queue/**", "/user/**").authenticated()
 
                 .anyMessage().authenticated();
+    }
+    @Override
+    protected boolean sameOriginDisabled() {
+        return true;
     }
 }

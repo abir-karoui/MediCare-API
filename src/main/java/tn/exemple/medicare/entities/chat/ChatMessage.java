@@ -20,8 +20,10 @@ public class ChatMessage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String content;
+    //private String photoUrl;
     private LocalDateTime time;
     private boolean read = false;
+
     @Enumerated(EnumType.STRING)
     private MessageType type;
 
@@ -31,6 +33,10 @@ public class ChatMessage {
     @ManyToOne
     @JoinColumn(name = "receivermsg_id")
     private User receiver;
+
+    @ManyToOne
+    @JoinColumn(name = "discussion_id")
+    private Discussion discussion;
     @PrePersist
     protected void onCreate() {
         this.time = LocalDateTime.now();

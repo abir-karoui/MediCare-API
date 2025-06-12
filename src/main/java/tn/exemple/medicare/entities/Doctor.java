@@ -16,10 +16,10 @@ import java.util.Set;
 
 @Getter
 @Setter
-@Entity
-@Data
-@Table(name = "Doctor")
+
 @AllArgsConstructor
+@Entity
+@Table(name = "Doctor")
 
 public class Doctor extends User {
 
@@ -32,7 +32,7 @@ public class Doctor extends User {
 
     @ManyToMany(mappedBy = "doctors")
     @JsonIgnore
-    Set<Patient> patients;
+    private Set<Patient> patients;
     @JsonIgnore
     @JsonManagedReference("doctor-prescription")
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -1,5 +1,7 @@
 package tn.exemple.medicare.entities.chat;
+import org.springframework.stereotype.Component;
 import tn.exemple.medicare.entities.auth.User;
+
 
 public class ChatMessageMapper {
 

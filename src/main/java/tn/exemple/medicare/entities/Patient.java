@@ -14,9 +14,10 @@ import java.util.List;
 import java.util.Set;
 
 
+@Getter
+@Setter
 @AllArgsConstructor
 @Entity
-@Data
 @Table(name = "Patient")
 public class Patient extends User {
 
@@ -38,7 +39,7 @@ public class Patient extends User {
             name = "patient_diseases",
             joinColumns = @JoinColumn(name = "idPatient"),
             inverseJoinColumns = @JoinColumn(name = "idDiseases"))
-    Set<Diseases> diseases ;
+    private  Set<Diseases> diseases ;
 
     @JsonIgnore
     @JsonManagedReference("patient-prescription")

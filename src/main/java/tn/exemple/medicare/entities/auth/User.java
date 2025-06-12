@@ -28,7 +28,7 @@ import java.util.List;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+//@Data
 @Builder
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "users")

@@ -39,11 +39,11 @@ public class MedicationIntake {
     @ManyToOne
     @JoinColumn(name = "prescription_id")
     @JsonBackReference("medicationintake")
+
     private Prescription prescription;
 
     @ManyToOne
     @JoinColumn(name = "patient_id")
     @JsonBackReference ("patient-medicationIntakes")
-
     private Patient patient;
 }
