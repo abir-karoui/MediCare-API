@@ -84,9 +84,9 @@ public class ChatServices implements IChatServices {
                     discussion.getId(),
                     otherUser.getId(),
                     otherUser.getFirstname() + " " + otherUser.getLastname(),
+                    otherUser.getEmail(),
                     otherUser.getPhoto(),
                     discussion.getLastMessage(),
-
                     discussion.getLastMessageTime().format(DateTimeFormatter.ofPattern("HH:mm"))
 
             );

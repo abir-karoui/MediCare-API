@@ -11,6 +11,7 @@ public class DiscussionResponseDTO {
     private Long discussionId;
     private Long otherUserId;
     private String otherUserFullName;
+    private String otherUserEmail;
     private String otherUserProfileImage;
     private String lastMessage;
     private String lastMessageTime;
