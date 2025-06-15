@@ -22,6 +22,7 @@ import tn.exemple.medicare.repositories.IDiscussionReposiroty;
 import tn.exemple.medicare.repositories.IUserRepository;
 import tn.exemple.medicare.services.IChatServices;
 import tn.exemple.medicare.services.IDiseases;
+import tn.exemple.medicare.services.INotificationServices;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
@@ -40,6 +41,8 @@ public class ChatController {
     private ChatMessageRepository chatMessageRepository;
     @Autowired
     private IDiscussionReposiroty discussionReposiroty;
+    @Autowired
+    private  INotificationServices iNotificationServices;
 
 
     @MessageMapping("/chat.register")
@@ -97,6 +100,8 @@ public class ChatController {
                         "/queue/messages",
                         responseDto
                 );
+                iNotificationServices.sendMsgNotif(savedMessage);
+
             } catch (Exception e) {
                 System.err.println("Erreur lors de l'envoi du message : " + e.getMessage());
             }
@@ -104,109 +109,6 @@ public class ChatController {
     }
 
 
-
-
-   /* @MessageMapping("/chat.private")
-    public void sendPrivate(@Payload ChatMessageDto messageDto, Principal principal) {
-        if (principal != null) {
-            String senderEmail = principal.getName();
-
-            User sender = iUserRepository.findByEmail(senderEmail)
-                    .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
-
-            String receiverEmail = messageDto.getReceiver() != null ? messageDto.getReceiver().getEmail() : null;
-            System.out.println("Receiver email: " + receiverEmail);
-
-            User receiver = iUserRepository.findByEmail(receiverEmail)
-                    .orElseThrow(() -> new RuntimeException("Destinataire non trouvé par email"));
-
-            ChatMessage message = ChatMessageMapper.toEntity(messageDto);
-            message.setSender(sender);
-            message.setReceiver(receiver);
-
-            ChatMessage savedMessage = chatMessageRepository.save(message);
-
-            ChatMessageDto responseDto = ChatMessageMapper.toDto(savedMessage);
-
-            try {
-                messagingTemplate.convertAndSendToUser(
-                        receiver.getEmail(),
-                        "/queue/messages",
-                        responseDto
-                );
-            } catch (Exception e) {
-                System.err.println("Erreur lors de l'envoi du message: " + e.getMessage());
-            }
-        }
-    }*/
-
-    /*@MessageMapping("/chat.private")
-    public void sendPrivate(@Payload ChatMessageDto messageDto, Principal principal) {
-        if (principal != null) {
-            String senderEmail = principal.getName();
-
-            User sender = iUserRepository.findByEmail(senderEmail)
-                    .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
-
-            String receiverEmail = messageDto.getReceiver() != null ? messageDto.getReceiver().getEmail() : null;
-            System.out.println("Receiver email: " + receiverEmail);
-
-            User receiver = iUserRepository.findByEmail(receiverEmail)
-                    .orElseThrow(() -> new RuntimeException("Destinataire non trouvé par email"));
-
-            ChatMessage message = ChatMessageMapper.toEntity(messageDto);
-            message.setSender(sender);
-            message.setReceiver(receiver);
-            chatMessageRepository.save(message);
-            ChatMessageDto responseDto = ChatMessageMapper.toDto(message);
-
-            messagingTemplate.convertAndSendToUser(
-                    receiver.getEmail(),
-                    "/queue/messages",
-                    responseDto
-            );
-        }
-    }*/
-  /* @MessageMapping("/chat.register")
-   @SendTo("/topic/public")
-   public ChatMessage register(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
-       // Récupérer l'utilisateur authentifié
-       Principal user = headerAccessor.getUser();
-       System.out.println("Utilisateur connecté: " + (user != null ? user.getName() : "ANONYME"));
-
-       if (user != null) {
-           headerAccessor.getSessionAttributes().put("username", user.getName());
-       }
-
-       return chatMessage;
-   }
-
-    @MessageMapping("/chat.send")
-    @SendTo("/topic/public")
-    public ChatMessage sendMessage(@Payload ChatMessage chatMessage, Principal user) {
-        System.out.println("Message envoyé par: " + (user != null ? user.getName() : "ANONYME"));
-        return chatMessage;
-    }
-
-*/
-
-
-    /*@MessageMapping("/chat.private")
-    public void sendPrivate(@Payload ChatMessage message) {
-        messagingTemplate.convertAndSendToUser(message.getReceiver().getEmail(), "/queue/messages", message);// envoyer a un user precis ( /user/receiverId/queue/messages)
-    }*/
-    /*
-    @MessageMapping("/chat.private")
-    public void sendPrivate(@Payload ChatMessage message, Principal principal) {
-        // Vérifier que l'utilisateur authentifié correspond à l'expéditeur
-        if (principal != null && message.getSender() != null) {
-            messagingTemplate.convertAndSendToUser(
-                    message.getReceiver().getEmail(),
-                    "/queue/messages",
-                    message
-            );
-        }
-    }*/
 
 
 

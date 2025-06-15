@@ -12,12 +12,9 @@ import java.util.List;
 
 @Repository
 public interface IMedicationIntakeRepository extends JpaRepository<MedicationIntake, Long> {
-    /*@Query("SELECT m FROM MedicationIntake m " +
-            "WHERE m.date = CURRENT_DATE " +
-            "AND m.timeToTake BETWEEN :now AND :oneMinuteLater " +
-            "AND m.notified = false")
-    List<MedicationIntake> findTodayIntakesToNotify(@Param("now") LocalTime now, @Param("oneMinuteLater") LocalTime oneMinuteLater);
-*/
+
     List<MedicationIntake> findByDateAndTimeToTakeAndNotifiedFalse(LocalDate date, LocalTime timeToTake);
+    List<MedicationIntake> findByPatientIdAndDate(Long patientId, LocalDate date);
+
 
 }

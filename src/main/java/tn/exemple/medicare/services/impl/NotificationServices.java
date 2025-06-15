@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import tn.exemple.medicare.configs.AuthService;
 import tn.exemple.medicare.entities.Patient;
 import tn.exemple.medicare.entities.auth.User;
+import tn.exemple.medicare.entities.chat.ChatMessage;
 import tn.exemple.medicare.entities.dto.FcmTokenRequest;
 import tn.exemple.medicare.entities.notification.Notification;
 import tn.exemple.medicare.entities.notification.NotificationRequest;
@@ -42,17 +43,6 @@ public class NotificationServices  implements INotificationServices {
         user.setFcmToken(tokenRequest.getFcmToken());
         userRepository.save(user);
     }
-   /* @Override
-    public Page<Notification> getNotifications(int pageNo, int pageSize) {
-        Long userId = authService.getAuthenticatedUserId();
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User with ID: " + userId + " not found"));
-
-        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, "sentAt"));
-
-        return notificationRepository.findByUserId(userId, pageable);
-    }*/
 
    @Override
    public Page<NotificationResponse> getNotifications(int pageNo, int pageSize) {
@@ -67,7 +57,6 @@ public class NotificationServices  implements INotificationServices {
        return notifications.map(notificationMapper::mapToDto);
    }
    @Override
-
     public void sendPrescriptionNotificationToPatient(Patient patient, User doctor, Prescription prescription) {
         if (patient.getFcmToken() != null && !patient.getFcmToken().isBlank()) {
             NotificationRequest notif = NotificationRequest.builder()
@@ -92,6 +81,24 @@ public class NotificationServices  implements INotificationServices {
             }
         }
     }
+    @Override
+
+    public void sendMsgNotif(ChatMessage chatMessage) {
+        String fcmToken = chatMessage.getReceiver().getFcmToken();
+        if (fcmToken != null && !fcmToken.isBlank()) {
+            NotificationRequest notif = NotificationRequest.builder()
+                    .title("New message from " + chatMessage.getSender().fullName())
+                    .body(chatMessage.getContent())
+                    .token(fcmToken)
+                    .build();
+            try {
+                fcmService.sendMessageToToken(notif);
+            } catch (Exception e) {
+                System.out.println("Erreur FCM : " + e.getMessage());
+            }
+        }
+    }
+
 
 
 
