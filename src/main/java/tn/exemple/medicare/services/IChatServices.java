@@ -15,6 +15,10 @@ public interface IChatServices {
     Page<DiscussionResponseDTO> getUserDiscussions(Pageable pageable);
     Page<ChatMessageDto> getMessagesWithUser(Long otherUserId, Pageable pageable);
 
-     List<ChatMessage> getUnreadMessages(User user) ;
+    //List<ChatMessage> getUnreadMessages(User user) ;
     void markAsRead(ChatMessage message);
+    void deleteDiscussionForUser(Long discussionId);
+    void deleteMessage(Long messageId);
+   // int getUnreadDiscussionsCount();
+   List<Long> getUnreadDiscussionIds();
 }

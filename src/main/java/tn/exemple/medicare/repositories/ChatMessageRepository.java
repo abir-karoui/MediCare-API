@@ -10,6 +10,7 @@ import tn.exemple.medicare.entities.auth.User;
 import tn.exemple.medicare.entities.chat.ChatMessage;
 import tn.exemple.medicare.entities.chat.Discussion;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +24,22 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     );
     List<ChatMessage> findByReceiverAndReadFalse(User receiver);
     Page<ChatMessage> findByDiscussionId(Long discussionId, Pageable pageable);
+    Page<ChatMessage> findByDiscussionIdAndTimeAfter(Long discussionId, LocalDateTime time, Pageable pageable);
+   /* @Query("""
+    SELECT COUNT(DISTINCT m.discussion.id)
+    FROM ChatMessage m
+    WHERE m.receiver.id = :userId
+      AND m.read = false
+""")
+    int countUnreadDiscussionsForUser(@Param("userId") Long userId);*/
+   @Query("""
+    SELECT DISTINCT m.discussion.id
+    FROM ChatMessage m
+    WHERE m.receiver.id = :userId
+      AND m.read = false
+""")
+   List<Long> findUnreadDiscussionIdsForUser(@Param("userId") Long userId);
+
 
 
 

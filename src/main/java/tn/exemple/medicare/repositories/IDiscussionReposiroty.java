@@ -4,11 +4,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import tn.exemple.medicare.entities.auth.User;
 import tn.exemple.medicare.entities.chat.ChatMessage;
 import tn.exemple.medicare.entities.chat.Discussion;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +21,22 @@ public interface IDiscussionReposiroty  extends JpaRepository<Discussion, Long> 
             "(d.user1 = :user2 AND d.user2 = :user1)")
     Optional<Discussion> findByUsers(User user1, User user2);
     Page<Discussion> findByUser1IdOrUser2IdOrderByLastMessageTimeDesc(Long userId1, Long userId2, Pageable pageable);
+    @Query("""
+SELECT d FROM Discussion d
+WHERE 
+    (d.user1.id = :userId AND (d.deletedAtByUser1 IS NULL OR d.lastMessageTime > d.deletedAtByUser1))
+ OR (d.user2.id = :userId AND (d.deletedAtByUser2 IS NULL OR d.lastMessageTime > d.deletedAtByUser2))
+ORDER BY d.lastMessageTime DESC
+""")
+    Page<Discussion> findVisibleDiscussionsForUser(@Param("userId") Long userId, Pageable pageable);
+
+
+
+
+
+
+
+
 
 
 

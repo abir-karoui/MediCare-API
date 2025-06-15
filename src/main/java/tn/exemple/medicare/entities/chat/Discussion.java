@@ -1,13 +1,16 @@
 package tn.exemple.medicare.entities.chat;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import tn.exemple.medicare.entities.auth.User;
+import tn.exemple.medicare.entities.invitation.Invitation;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -29,6 +32,12 @@ public class Discussion {
 
     private String lastMessage;
     private LocalDateTime lastMessageTime;
+    private LocalDateTime deletedAtByUser1;
+    private LocalDateTime deletedAtByUser2;
+
+    @OneToMany(mappedBy = "discussion", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChatMessage> chatMessages ;
+
 
 }
 
