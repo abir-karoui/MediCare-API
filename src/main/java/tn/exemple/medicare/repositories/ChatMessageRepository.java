@@ -17,21 +17,9 @@ import java.util.Optional;
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
 
-    List<ChatMessage> findBySenderOrReceiver(User sender, User receiver);
-
-    List<ChatMessage> findBySenderAndReceiverOrReceiverAndSender(
-            User sender1, User receiver1, User sender2, User receiver2
-    );
-    List<ChatMessage> findByReceiverAndReadFalse(User receiver);
     Page<ChatMessage> findByDiscussionId(Long discussionId, Pageable pageable);
     Page<ChatMessage> findByDiscussionIdAndTimeAfter(Long discussionId, LocalDateTime time, Pageable pageable);
-   /* @Query("""
-    SELECT COUNT(DISTINCT m.discussion.id)
-    FROM ChatMessage m
-    WHERE m.receiver.id = :userId
-      AND m.read = false
-""")
-    int countUnreadDiscussionsForUser(@Param("userId") Long userId);*/
+
    @Query("""
     SELECT DISTINCT m.discussion.id
     FROM ChatMessage m

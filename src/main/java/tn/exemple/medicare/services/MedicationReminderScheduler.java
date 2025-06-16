@@ -140,7 +140,7 @@ public class MedicationReminderScheduler {
 
     private final Logger logger = LoggerFactory.getLogger(MedicationReminderScheduler.class);
     @Transactional
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 35 15 * * *")
     public void generateTodayMedicationIntakes() {
         LocalDate today = LocalDate.now();
 

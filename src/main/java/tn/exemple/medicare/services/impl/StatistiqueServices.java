@@ -14,10 +14,7 @@ import tn.exemple.medicare.services.IStatistiqueServices;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,9 +22,6 @@ import java.util.stream.Collectors;
 public class StatistiqueServices implements IStatistiqueServices {
 
     private final IPrescriptionRepository prescriptionRepository;
-    private final IDoseRepository iDoseRepository;
-    private final MedicationServices medicationServices;
-    private final IMedicationRepository iMedicationRepository;
     private  final AuthService authService;
     private  final IMedicationIntakeRepository medicationIntakeRepository;
     @Override
@@ -122,7 +116,7 @@ public class StatistiqueServices implements IStatistiqueServices {
                         time.toString(),
                         planned,
                         taken,
-                        missedDates // anciennement "intakeDates"
+                        missedDates
                 ));
 
                 totalPlanned += planned;
@@ -142,7 +136,6 @@ public class StatistiqueServices implements IStatistiqueServices {
         return archivedList;
     }
     @Override
-
     public TodayPatientSummary getTodaySummary() {
         Long patientId = authService.getAuthenticatedUserId();
         LocalDate today = LocalDate.now();
@@ -150,16 +143,19 @@ public class StatistiqueServices implements IStatistiqueServices {
         List<MedicationIntake> todayIntakes = medicationIntakeRepository
                 .findByPatientIdAndDate(patientId, today);
 
-        // Médicaments uniques
         long uniqueMedicationsCount = todayIntakes.stream()
                 .map(MedicationIntake::getMedicationName)
                 .distinct()
                 .count();
 
         int totalDosesToday = todayIntakes.size();
-        int takenDosesCount = (int) todayIntakes.stream().filter(MedicationIntake::isTaken).count();
+        int takenDosesCount = (int) todayIntakes.stream()
+                .filter(MedicationIntake::isTaken)
+                .count();
 
-        List<PlannedDoseDto> plannedDoses = todayIntakes.stream()
+        // ✅ Calcul de la prochaine dose
+        Optional<PlannedDoseDto> nextDose = todayIntakes.stream()
+                .filter(intake -> !intake.isTaken() && intake.getTimeToTake().isAfter(LocalTime.now()))
                 .sorted(Comparator.comparing(MedicationIntake::getTimeToTake))
                 .map(intake -> new PlannedDoseDto(
                         intake.getTimeToTake(),
@@ -167,11 +163,23 @@ public class StatistiqueServices implements IStatistiqueServices {
                         intake.getQuantity(),
                         intake.isTaken()
                 ))
-                .collect(Collectors.toList());
-
-        Optional<PlannedDoseDto> nextDose = plannedDoses.stream()
-                .filter(dose -> !dose.isTaken() && dose.getTime().isAfter(LocalTime.now()))
                 .findFirst();
+
+        // ✅ Regrouper par nom de médicament
+        Map<String, List<SimpleDoseDto>> groupedDoses = todayIntakes.stream()
+                .sorted(Comparator.comparing(MedicationIntake::getTimeToTake))
+                .collect(Collectors.groupingBy(
+                        MedicationIntake::getMedicationName,
+                        LinkedHashMap::new,
+                        Collectors.mapping(
+                                intake -> new SimpleDoseDto(
+                                        intake.getTimeToTake(),
+                                        intake.getQuantity(),
+                                        intake.isTaken()
+                                ),
+                                Collectors.toList()
+                        )
+                ));
 
         return new TodayPatientSummary(
                 today,
@@ -179,7 +187,7 @@ public class StatistiqueServices implements IStatistiqueServices {
                 totalDosesToday,
                 takenDosesCount,
                 nextDose.orElse(null),
-                plannedDoses
+                groupedDoses
         );
     }
 

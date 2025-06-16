@@ -9,8 +9,8 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class ArchivedDoseStats {
-    private String timeToTake;  // "08:00"
+    private String timeToTake;
     private int totalPlanned;
     private int totalTaken;
-    private List<LocalDate> intakeDates; // Pour chaque prise réelle
+    private List<LocalDate> intakeDates;
 }

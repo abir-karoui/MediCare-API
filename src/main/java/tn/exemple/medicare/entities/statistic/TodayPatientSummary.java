@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
@@ -14,5 +15,5 @@ public class TodayPatientSummary {
     private int totalDosesToday;
     private int takenDosesCount;
     private PlannedDoseDto nextDose;
-    private List<PlannedDoseDto> plannedDoses;
+    private Map<String, List<SimpleDoseDto>> plannedDosesGrouped;
 }

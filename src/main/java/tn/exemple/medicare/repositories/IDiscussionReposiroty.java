@@ -20,7 +20,6 @@ public interface IDiscussionReposiroty  extends JpaRepository<Discussion, Long> 
             "(d.user1 = :user1 AND d.user2 = :user2) OR " +
             "(d.user1 = :user2 AND d.user2 = :user1)")
     Optional<Discussion> findByUsers(User user1, User user2);
-    Page<Discussion> findByUser1IdOrUser2IdOrderByLastMessageTimeDesc(Long userId1, Long userId2, Pageable pageable);
     @Query("""
 SELECT d FROM Discussion d
 WHERE 
@@ -29,13 +28,6 @@ WHERE
 ORDER BY d.lastMessageTime DESC
 """)
     Page<Discussion> findVisibleDiscussionsForUser(@Param("userId") Long userId, Pageable pageable);
-
-
-
-
-
-
-
 
 
 
