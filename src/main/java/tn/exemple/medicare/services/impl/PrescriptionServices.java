@@ -63,10 +63,22 @@ public class PrescriptionServices implements IPrescriptionServices {
                 medication = iMedicationRepository.save(medication);
             }
         }
-        boolean exists = iPrescriptionRepository
+      /*  boolean exists = iPrescriptionRepository
                 .existsByPatientAndMedicationDenomination(patient, prescriptionDto.getMedication().getDenomination());
 
+
         if (exists) {
+            throw new BusinessException(BusinessErrorCode.PRESCRIPTION_ALREADY_EXISTS);
+        }
+
+       */
+        List<Prescription> existingPrescriptions = iPrescriptionRepository
+                .findByPatientAndMedicationDenomination(patient, prescriptionDto.getMedication().getDenomination());
+
+        boolean activeExists = existingPrescriptions.stream()
+                .anyMatch(Prescription::isActive);
+
+        if (activeExists) {
             throw new BusinessException(BusinessErrorCode.PRESCRIPTION_ALREADY_EXISTS);
         }
 
@@ -108,7 +120,7 @@ public class PrescriptionServices implements IPrescriptionServices {
         return savedPrescription;
     }
 
-    @Override
+  /*  @Override
     public List<Prescription> getPrescriptions() {
 
         Long userId = authService.getAuthenticatedUserId();
@@ -117,7 +129,38 @@ public class PrescriptionServices implements IPrescriptionServices {
 
           List<Prescription> prescriptions = iPrescriptionRepository.findByPatientIdOrderByCreatedAtDesc(userId);
         return prescriptions;
+    }*/
+  @Override
+  public List<Prescription> getPrescriptions() {
+      Long userId = authService.getAuthenticatedUserId();
+      User user = iUserRepository.findById(userId)
+              .orElseThrow(() -> new EntityNotFoundException("User with ID: " + userId + " not found"));
+
+      List<Prescription> allPrescriptions = iPrescriptionRepository.findByPatientIdOrderByCreatedAtDesc(userId);
+
+      List<Prescription> activePrescriptions = allPrescriptions.stream()
+              .filter(Prescription::isActive)
+              .collect(Collectors.toList());
+
+      return activePrescriptions;
+  }
+    @Override
+    public List<Prescription> getInactivePrescriptions() {
+        Long userId = authService.getAuthenticatedUserId();
+        User user = iUserRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User with ID: " + userId + " not found"));
+
+        List<Prescription> allPrescriptions = iPrescriptionRepository.findByPatientIdOrderByCreatedAtDesc(userId);
+
+
+        List<Prescription> inactivePrescriptions = allPrescriptions.stream()
+                .filter(p -> !p.isActive())
+                .collect(Collectors.toList());
+
+        return inactivePrescriptions;
     }
+
+
     @Override
     public Prescription getPrescriptionById(Long prescriptionId) {
         Long userId = authService.getAuthenticatedUserId();

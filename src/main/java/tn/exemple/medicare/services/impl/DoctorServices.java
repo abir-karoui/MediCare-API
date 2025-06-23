@@ -76,12 +76,22 @@ public class DoctorServices implements IDoctor {
 
             medication = iMedicationRepository.save(medication);
         }
-        boolean exists = iPrescriptionRepository
+        /*boolean exists = iPrescriptionRepository
                 .existsByPatientAndMedicationDenomination(patient, prescriptionDto.getMedication().getDenomination());
 
         if (exists) {
             throw new BusinessException(BusinessErrorCode.PRESCRIPTION_ALREADY_EXISTS);
+        }*/
+        List<Prescription> existingPrescriptions = iPrescriptionRepository
+                .findByPatientAndMedicationDenomination(patient, prescriptionDto.getMedication().getDenomination());
+
+        boolean activeExists = existingPrescriptions.stream()
+                .anyMatch(Prescription::isActive);
+
+        if (activeExists) {
+            throw new BusinessException(BusinessErrorCode.PRESCRIPTION_ALREADY_EXISTS);
         }
+
         Prescription prescription = prescriptionMapper.toEntity(prescriptionDto);
         prescription.setPatient(patient);
         prescription.setDoctor(doctor);

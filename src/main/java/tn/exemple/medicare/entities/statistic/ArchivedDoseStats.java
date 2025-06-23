@@ -10,7 +10,5 @@ import java.util.List;
 @AllArgsConstructor
 public class ArchivedDoseStats {
     private String timeToTake;
-    private int totalPlanned;
     private int totalTaken;
-    private List<LocalDate> intakeDates;
 }

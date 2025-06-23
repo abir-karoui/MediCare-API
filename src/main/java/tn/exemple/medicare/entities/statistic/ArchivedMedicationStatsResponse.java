@@ -10,8 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ArchivedMedicationStatsResponse {
     private String medicationName;
-    private int totalPlannedDoses;
-    private int totalTakenDoses;
+    private int plannedDosesCount;
     private LocalDate startDate;
     private LocalDate endDate;
     private List<ArchivedDoseStats> doses;

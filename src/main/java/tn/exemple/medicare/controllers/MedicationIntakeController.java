@@ -5,7 +5,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.exemple.medicare.entities.prescription.MedicationIntake;
+import tn.exemple.medicare.entities.prescription.MedicationIntakeSimpleDTO;
 import tn.exemple.medicare.services.IMedicationIntakeServices;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/intake")
@@ -23,4 +28,11 @@ public class MedicationIntakeController {
         String status = taken ? "taken" : "not taken";
         return ResponseEntity.ok("Medication with ID " + id + " marked as " + status);
     }
+
+    @GetMapping("/intakes/medication")
+    public ResponseEntity<Map<LocalDate, List<MedicationIntakeSimpleDTO>>> getGroupedUntakenDTOs() {
+        Map<LocalDate, List<MedicationIntakeSimpleDTO>> result = medicationIntakeService.getUntakenGroupedByDate();
+        return ResponseEntity.ok(result);
+    }
+
 }

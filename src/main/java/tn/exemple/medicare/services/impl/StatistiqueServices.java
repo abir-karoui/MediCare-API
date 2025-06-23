@@ -78,55 +78,35 @@ public class StatistiqueServices implements IStatistiqueServices {
         List<ArchivedMedicationStatsResponse> archivedList = new ArrayList<>();
 
         for (Prescription prescription : prescriptions) {
-            if (prescription.isActive()) continue; // ne traiter que les prescriptions inactives
+            if (prescription.isActive()) continue;
 
             String medicationName = prescription.getMedication().getDenomination();
             List<Dose> doses = prescription.getDoses();
             List<MedicationIntake> intakes = prescription.getMedicationIntakes();
 
-            // ✅ Calcul des dates de début et de fin
             LocalDate startDate = prescription.getCreatedAt().toLocalDate();
             LocalDate endDate = startDate.plusDays(prescription.getDurationDays());
 
-            long durationDays = ChronoUnit.DAYS.between(startDate, endDate);
 
             List<ArchivedDoseStats> doseStatsList = new ArrayList<>();
-            int totalPlanned = 0;
-            int totalTaken = 0;
+            int plannedDosesCount = prescription.getDurationDays();
 
             for (Dose dose : doses) {
                 LocalTime time = dose.getTimeToTake();
-
-                int planned = (int) durationDays; // dose prévue une fois par jour pour chaque heure
                 int taken = (int) intakes.stream()
                         .filter(i -> i.getTimeToTake().equals(time) && i.isTaken())
                         .count();
 
-                // ✅ Liste des dates manquées (taken = false)
-                List<LocalDate> missedDates = intakes.stream()
-                        .filter(i -> i.getTimeToTake().equals(time)
-                                && !i.isTaken()
-                                && !i.getDate().isAfter(LocalDate.now()))
-                        .map(MedicationIntake::getDate)
-                        .distinct()
-                        .sorted()
-                        .toList();
 
                 doseStatsList.add(new ArchivedDoseStats(
                         time.toString(),
-                        planned,
-                        taken,
-                        missedDates
+                        taken
                 ));
-
-                totalPlanned += planned;
-                totalTaken += taken;
             }
 
             archivedList.add(new ArchivedMedicationStatsResponse(
                     medicationName,
-                    totalPlanned,
-                    totalTaken,
+                    plannedDosesCount,
                     startDate,
                     endDate,
                     doseStatsList

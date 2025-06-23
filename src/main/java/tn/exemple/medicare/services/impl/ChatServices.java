@@ -41,31 +41,7 @@ public class ChatServices implements IChatServices {
 
         return messagesPage.map(ChatMessageMapper::toDto);
     }
-   /* @Override
-    public Page<ChatMessageDto> getMessagesWithUser(Long otherUserId, Pageable pageable) {
-        Long currentUserId = authService.getAuthenticatedUserId();
 
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new EntityNotFoundException("Utilisateur actuel non trouvé"));
-
-        User otherUser = userRepository.findById(otherUserId)
-                .orElseThrow(() -> new EntityNotFoundException("Autre utilisateur non trouvé"));
-
-        Discussion discussion = discussionRepository
-                .findByUsers(currentUser, otherUser)
-                .orElseThrow(() -> new EntityNotFoundException("Discussion entre utilisateurs non trouvée"));
-
-        Page<ChatMessage> messagesPage = chatMessageRepository.findByDiscussionId(discussion.getId(), pageable);
-
-
-        List<ChatMessage> unreadMessages = messagesPage.getContent().stream()
-                .filter(msg -> msg.getSender().getId() == otherUserId && !msg.isRead())
-                .toList();
-
-        unreadMessages.forEach(this::markAsRead);
-
-        return messagesPage.map(ChatMessageMapper::toDto);
-    }*/
    @Override
    public Page<ChatMessageDto> getMessagesWithUser(Long otherUserId, Pageable pageable) {
        Long currentUserId = authService.getAuthenticatedUserId();
@@ -112,29 +88,6 @@ public class ChatServices implements IChatServices {
 
     @Override
 
-   /* public Page<DiscussionResponseDTO> getUserDiscussions(Pageable pageable) {
-        Long userId = authService.getAuthenticatedUserId();
-        Page<Discussion> discussions = discussionRepository
-                .findByUser1IdOrUser2IdOrderByLastMessageTimeDesc(userId, userId, pageable);
-
-        return discussions.map(discussion -> {
-            User otherUser = discussion.getUser1().getId() == userId
-                    ? discussion.getUser2()
-                    : discussion.getUser1();
-
-
-            return new DiscussionResponseDTO(
-                    discussion.getId(),
-                    otherUser.getId(),
-                    otherUser.getFirstname() + " " + otherUser.getLastname(),
-                    otherUser.getEmail(),
-                    otherUser.getPhoto(),
-                    discussion.getLastMessage(),
-                    discussion.getLastMessageTime().format(DateTimeFormatter.ofPattern("HH:mm"))
-
-            );
-        });
-    }*/
 
     public Page<DiscussionResponseDTO> getUserDiscussions(Pageable pageable) {
         Long userId = authService.getAuthenticatedUserId();
@@ -165,10 +118,7 @@ public class ChatServices implements IChatServices {
 
 
 
-   /* @Override
-    public List<ChatMessage> getUnreadMessages(User user) {
-        return chatMessageRepository.findByReceiverAndReadFalse(user);
-    }*/
+
     @Override
     public void markAsRead(ChatMessage message) {
         message.setRead(true);
@@ -208,10 +158,7 @@ public class ChatServices implements IChatServices {
 
 
     @Override
-    /*public int getUnreadDiscussionsCount() {
-        Long currentUserId = authService.getAuthenticatedUserId();
-        return chatMessageRepository.countUnreadDiscussionsForUser(currentUserId);
-    }*/
+
     public List<Long> getUnreadDiscussionIds() {
         Long currentUserId = authService.getAuthenticatedUserId();
         return chatMessageRepository.findUnreadDiscussionIdsForUser(currentUserId);

@@ -59,29 +59,5 @@ public class MedicationContoller {
         DeleteMedicationResponse response = new DeleteMedicationResponse("Denomination deleted successfully", medications);
         return ResponseEntity.ok(response);
     }
-    /*@DeleteMapping("/id/{id}")
-    public ResponseEntity<Object> deleteMedicationsById(@PathVariable Long id) {
-            iMedicationServices.deleteMedicationsById(id);
-            return new ResponseEntity<>("Medication with id : " +id+ " deleted successfully", HttpStatus.OK);
-    }
-    @GetMapping("/pagination")
-    public ResponseEntity<Page<Medication>> getMedications(
-            @RequestParam(defaultValue = "0" ) int pageNo,
-            @RequestParam(defaultValue = "5" ) int pageSize) {
-        Page<Medication> medications = iMedicationServices.getMedications(pageNo, pageSize);
-        return ResponseEntity.ok(medications);
-    }
-    */
-        /*@GetMapping("/all")
-    public ResponseEntity<GetAllMedications> retrieveAllMedications() {
-        List<Medication> medications = iMedicationServices.retrieveAllMedications();
-        GetAllMedications response = new GetAllMedications(medications , medications.size());
-        return ResponseEntity.ok(response);
-    }
 
-    @GetMapping("/denomination/{denomination}")
-    public ResponseEntity<List<Medication>> getMedicationByDenomation(@PathVariable("denomination") String denomination) {
-        List<Medication> medications = iMedicationServices.getMedicationsByDenomination(denomination);
-        return ResponseEntity.ok(medications);
-    }*/
 }

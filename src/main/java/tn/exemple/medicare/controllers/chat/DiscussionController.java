@@ -3,7 +3,9 @@ package tn.exemple.medicare.controllers.chat;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.exemple.medicare.controllers.authcontrollers.AuthenticationResponse;
@@ -42,11 +44,21 @@ public class DiscussionController {
         return chatServices.getUserDiscussions(pageable);
     }
 
-    @GetMapping("/{otherUserId}")
-    public Page<ChatMessageDto> getMessagesWithUser(
+    //@GetMapping("/{otherUserId}")
+   /* public Page<ChatMessageDto> getMessagesWithUser(
             @PathVariable Long otherUserId,
             Pageable pageable
     ) {
+        return chatServices.getMessagesWithUser(otherUserId, pageable);
+    }
+*/
+    @GetMapping("/{otherUserId}")
+    public Page<ChatMessageDto> getMessagesWithUser(
+            @PathVariable Long otherUserId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
         return chatServices.getMessagesWithUser(otherUserId, pageable);
     }
 

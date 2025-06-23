@@ -5,11 +5,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.exemple.medicare.entities.dto.PrescriptionDto;
+import tn.exemple.medicare.entities.prescription.MedicationRequest;
+import tn.exemple.medicare.services.IGeminiService;
 import tn.exemple.medicare.services.IPrescriptionServices;
 
 import tn.exemple.medicare.entities.prescription.Prescription;
+import tn.exemple.medicare.services.impl.GeminiService;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/prescription")
@@ -24,6 +28,11 @@ public class PrescriptionController {
     @GetMapping("/prescriptions")
     public ResponseEntity<List<Prescription>> getPrescriptions() {
         List<Prescription> prescriptions = prescriptionServices.getPrescriptions();
+        return ResponseEntity.ok(prescriptions);
+    }
+    @GetMapping("/prescriptions/inactive")
+    public ResponseEntity<List<Prescription>> getInactivePrescriptions() {
+        List<Prescription> prescriptions = prescriptionServices.getInactivePrescriptions();
         return ResponseEntity.ok(prescriptions);
     }
     @GetMapping("/{prescriptionId}")
@@ -41,6 +50,21 @@ public class PrescriptionController {
             @RequestBody PrescriptionDto prescriptionDto) {
         Prescription updatedPrescription = prescriptionServices.updatePrescriptionPartial(id, prescriptionDto);
         return ResponseEntity.ok(updatedPrescription);
+    }
+    private final IGeminiService geminiService;
+
+    @PostMapping("/validate")
+    public ResponseEntity<?> validateMedication(@RequestBody MedicationRequest request) {
+        String newMedication = request.getNewMedication();
+        if (newMedication == null || newMedication.isEmpty()) {
+            return ResponseEntity.badRequest().body("Le nom du médicament ne peut pas être vide.");
+        }
+
+        String response = geminiService.validateNewMedication(newMedication);
+
+        return ResponseEntity.ok().body(
+                Map.of("status", "ok", "gemini_response", response)
+        );
     }
 
 }

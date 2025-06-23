@@ -6,11 +6,17 @@ import org.springframework.stereotype.Service;
 import tn.exemple.medicare.configs.AuthService;
 import tn.exemple.medicare.entities.Patient;
 import tn.exemple.medicare.entities.prescription.MedicationIntake;
+import tn.exemple.medicare.entities.prescription.MedicationIntakeSimpleDTO;
 import tn.exemple.medicare.repositories.IMedicationIntakeRepository;
 import tn.exemple.medicare.repositories.IPatientRepository;
 import tn.exemple.medicare.services.IMedicationIntakeServices;
 
-import java.util.Optional;
+import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -38,4 +44,30 @@ public class MedicationIntakeServices implements IMedicationIntakeServices {
         intake.setTaken(taken);
         return medicationIntakeRepository.save(intake);
     }
+    @Override
+
+    public Map<LocalDate, List<MedicationIntakeSimpleDTO>> getUntakenGroupedByDate() {
+        Long userId = authService.getAuthenticatedUserId();
+        Patient patient = iPatientRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Patient with ID: '" + userId + "' not found"));
+
+        List<MedicationIntake> intakes = medicationIntakeRepository
+                .findByPatientAndTakenFalseOrderByDateDescTimeToTakeAsc(patient);
+
+        return intakes.stream()
+                .collect(Collectors.groupingBy(
+                        MedicationIntake::getDate,
+                        () -> new TreeMap<>(Comparator.reverseOrder()),
+                        Collectors.mapping(intake ->
+                                        new MedicationIntakeSimpleDTO(
+                                                intake.getId(),
+                                                intake.getMedicationName(),
+                                                intake.getTimeToTake(),
+                                                intake.getQuantity()
+                                        ),
+                                Collectors.toList()
+                        )
+                ));
+    }
+
 }

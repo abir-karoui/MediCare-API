@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import tn.exemple.medicare.entities.Patient;
 import tn.exemple.medicare.entities.prescription.MedicationIntake;
 
 import java.time.LocalDate;
@@ -15,6 +16,9 @@ public interface IMedicationIntakeRepository extends JpaRepository<MedicationInt
 
     List<MedicationIntake> findByDateAndTimeToTakeAndNotifiedFalse(LocalDate date, LocalTime timeToTake);
     List<MedicationIntake> findByPatientIdAndDate(Long patientId, LocalDate date);
+    List<MedicationIntake> findByPatientAndTakenFalseOrderByDateDescTimeToTakeAsc(Patient patient);
+
+
 
 
 }

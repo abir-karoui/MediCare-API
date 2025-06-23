@@ -16,10 +16,12 @@ import java.util.Optional;
 @Repository
 public interface IPrescriptionRepository  extends JpaRepository<Prescription, Long> {
     //List<Prescription> findPrescriptionByUser(Long userId);
-    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END " +
+  /*  @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END " +
             "FROM Prescription p " +
             "WHERE p.patient = :patient AND p.medication.denomination = :denomination")
     boolean existsByPatientAndMedicationDenomination(@Param("patient") Patient patient, @Param("denomination") String denomination);
+*/
+    List<Prescription> findByPatientAndMedicationDenomination(Patient patient, String denomination);
 
 
     List<Prescription> findByPatientIdOrderByCreatedAtDesc(Long userId);
