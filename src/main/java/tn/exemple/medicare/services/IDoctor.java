@@ -12,4 +12,5 @@ public interface IDoctor {
     List<Prescription> getPrescriptions(Long patientId);
     List<Prescription> getPrescriptionsNotCreatedByDoctor(Long patientId);
     void deletePrescription(Long prescriptionId);
+    List<Prescription> getAllPrescriptionsForPatient(Long patientId);
 }

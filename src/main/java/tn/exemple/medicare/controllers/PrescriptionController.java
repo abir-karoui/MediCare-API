@@ -53,18 +53,21 @@ public class PrescriptionController {
     }
     private final IGeminiService geminiService;
 
-    @PostMapping("/validate")
-    public ResponseEntity<?> validateMedication(@RequestBody MedicationRequest request) {
+    @PostMapping("/validate/{idPatient}")
+    public ResponseEntity<String> validateMedication(
+            @PathVariable Long idPatient,
+            @RequestBody MedicationRequest request) {
+
         String newMedication = request.getNewMedication();
-        if (newMedication == null || newMedication.isEmpty()) {
+
+        if (newMedication == null || newMedication.trim().isEmpty()) {
             return ResponseEntity.badRequest().body("Le nom du médicament ne peut pas être vide.");
         }
 
-        String response = geminiService.validateNewMedication(newMedication);
+        String geminiResponse = geminiService.validateNewMedication(idPatient, newMedication);
 
-        return ResponseEntity.ok().body(
-                Map.of("status", "ok", "gemini_response", response)
-        );
+        return ResponseEntity.ok(geminiResponse);
     }
+
 
 }

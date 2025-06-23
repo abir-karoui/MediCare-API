@@ -29,6 +29,11 @@ public class DoctorController {
         List<Prescription> prescriptions = iDoctor.getPrescriptionsNotCreatedByDoctor(patientId);
         return ResponseEntity.ok(prescriptions);
     }
+    @GetMapping("/gemini/{patientId}")
+    public ResponseEntity<List<Prescription>> getAllPrescriptionsForPatient(@PathVariable Long patientId) {
+        List<Prescription> prescriptions = iDoctor.getAllPrescriptionsForPatient(patientId);
+        return ResponseEntity.ok(prescriptions);
+    }
 
     @DeleteMapping("/prescription/{id}")
     public void deletePrescription(@PathVariable Long id) {

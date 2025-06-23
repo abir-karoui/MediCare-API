@@ -76,12 +76,7 @@ public class DoctorServices implements IDoctor {
 
             medication = iMedicationRepository.save(medication);
         }
-        /*boolean exists = iPrescriptionRepository
-                .existsByPatientAndMedicationDenomination(patient, prescriptionDto.getMedication().getDenomination());
 
-        if (exists) {
-            throw new BusinessException(BusinessErrorCode.PRESCRIPTION_ALREADY_EXISTS);
-        }*/
         List<Prescription> existingPrescriptions = iPrescriptionRepository
                 .findByPatientAndMedicationDenomination(patient, prescriptionDto.getMedication().getDenomination());
 
@@ -180,6 +175,21 @@ public class DoctorServices implements IDoctor {
        notificationRepository.nullifyPrescriptionReferences(prescriptionId);
        iPrescriptionRepository.delete(prescription);
    }
+
+    @Override
+    public List<Prescription> getAllPrescriptionsForPatient(Long patientId) {
+        Long doctorId = authService.getAuthenticatedUserId();
+
+        iDoctorRepository.findById(doctorId)
+                .orElseThrow(() -> new EntityNotFoundException("Doctor with ID: " + doctorId + " not found"));
+
+        List<Prescription> allPrescriptions = iPrescriptionRepository.findByPatientIdOrderByCreatedAtDesc(patientId);
+
+        return allPrescriptions.stream()
+                .filter(Prescription::isActive)
+                .collect(Collectors.toList());
+    }
+
 
 
 

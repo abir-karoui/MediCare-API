@@ -23,32 +23,29 @@ public class GeminiService implements IGeminiService {
 
     private final RestTemplate restTemplate = new RestTemplate();
     private  final PrescriptionServices prescriptionServices;
+    private  final DoctorServices doctorServices;
 
     @Override
     public String checkInteractions(String userPrompt) {
         String url = "https://openrouter.ai/api/v1/chat/completions";
 
+        // Corps de la requête
         Map<String, Object> body = new HashMap<>();
-        body.put("model", "google/gemini-2.5-pro-preview");
-        body.put("max_tokens", 1000);
+        body.put("model", "deepseek/deepseek-chat-v3-0324:free");
 
-        // Préparer le message utilisateur
-        Map<String, Object> message = new HashMap<>();
-        message.put("role", "user");
+        List<Map<String, String>> messages = new ArrayList<>();
+        messages.add(Map.of(
+                "role", "user",
+                "content", userPrompt
+        ));
+        body.put("messages", messages);
 
-        Map<String, Object> textContent = new HashMap<>();
-        textContent.put("type", "text");
-        textContent.put("text", userPrompt);
-
-        message.put("content", Collections.singletonList(textContent));
-        body.put("messages", List.of(message));
-
-        // Préparer les headers
+        // Headers HTTP
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
-        headers.add("HTTP-Referer", "https://votresite.com");
-        headers.add("X-Title", "MediCare App");
+        headers.add("HTTP-Referer", "https://votresite.com"); // facultatif
+        headers.add("X-Title", "MediCare App"); // facultatif
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
@@ -64,45 +61,36 @@ public class GeminiService implements IGeminiService {
             if (responseBody != null && responseBody.containsKey("choices")) {
                 List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
                 if (!choices.isEmpty()) {
-                    Map<String, Object> firstChoice = choices.get(0);
-                    Map<String, Object> messageResponse = (Map<String, Object>) firstChoice.get("message");
-                    Object content = messageResponse.get("content");
-
-                    if (content instanceof List) {
-                        List<Map<String, String>> contentList = (List<Map<String, String>>) content;
-                        return contentList.get(0).get("text");
-                    } else if (content instanceof String) {
-                        return (String) content;
-                    } else {
-                        return "Réponse inattendue de Gemini.";
-                    }
+                    Map<String, Object> choice = choices.get(0);
+                    Map<String, Object> message = (Map<String, Object>) choice.get("message");
+                    String content = (String) message.get("content");
+                    return content;
                 }
             }
-            return "Pas de réponse de Gemini.";
+            return "No response from DeepSeek.";
         } catch (Exception e) {
             e.printStackTrace();
-            return "Erreur lors de l'appel à Gemini: " + e.getMessage();
+            return "Error calling DeepSeek API: " + e.getMessage();
         }
     }
 
-    public String validateNewMedication(String newMedication) {
-        List<Prescription> prescriptions = prescriptionServices.getPrescriptions();
+    public String validateNewMedication(Long idPatient , String newMedication) {
+        List<Prescription> prescriptions = doctorServices.getAllPrescriptionsForPatient(idPatient);
 
         List<String> medicationNames = prescriptions.stream()
                 .map(prescription -> prescription.getMedication().getDenomination())
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        //medicationNames.add(newMedication);
-
         String prompt = "The patient is currently taking the following medications: " +
-                String.join(", ", medicationNames) +
-                ". They want to add this medication: " + newMedication + ". " +
-                "Is there a risk of drug interaction between this new medication and the others? " +
-                "Respond only with a single line in English:" +
-                "-Warning: <brief description of the interaction>" +
-                "no interaction detected." +
-                "Do not provide any explanation or reasoning.";
+                String.join(", ", medicationNames) + ".\n" +
+                "They want to add this new medication: " + newMedication + ".\n" +
+                "Is there any known drug interaction between this new medication and the current ones?\n" +
+                "Respond in English using ONLY ONE of the following formats:\n" +
+                "-Warning: <short description of the interaction>\n" +
+                "-OK: no interaction detected.\n" +
+                "Do not explain. Do not analyze. Do not reason. Just give the final answer in one line.";
+
 
 
 
