@@ -38,6 +38,17 @@ public interface IPrescriptionRepository  extends JpaRepository<Prescription, Lo
 
     Prescription findByPatientIdAndId(Long userId , Long prescriptionId );
     List<Prescription> findByDoctorIdAndPatientIdOrderByCreatedAtDesc(Long doctorId, Long patientId);
+    int countByDoctorId(Long doctorId);
+    @Query(value = """
+    SELECT DATE(created_at) as day, COUNT(*) as count
+    FROM prescription
+    WHERE doctor_id = :doctorId
+      AND created_at >= CURRENT_DATE - INTERVAL '6 day'
+    GROUP BY DATE(created_at)
+    ORDER BY day
+    """, nativeQuery = true)
+    List<Object[]> countByDoctorIdGroupedByDayLast7Days(@Param("doctorId") Long doctorId);
+
 
 
 

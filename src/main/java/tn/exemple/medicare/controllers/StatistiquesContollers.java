@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import tn.exemple.medicare.entities.statistic.ArchivedMedicationStatsResponse;
+import tn.exemple.medicare.entities.statistic.DoctorDashboardDTO;
 import tn.exemple.medicare.entities.statistic.MedicationStatsResponse;
 import tn.exemple.medicare.entities.statistic.TodayPatientSummary;
 import tn.exemple.medicare.services.IStatistiqueServices;
@@ -32,6 +33,10 @@ public class StatistiquesContollers {
         TodayPatientSummary summary = iStatistiqueServices.getTodaySummary();
         return ResponseEntity.ok(summary);
     }
-
+    @GetMapping("/dashboard/doctor")
+    public ResponseEntity<DoctorDashboardDTO> getDashboard() {
+        DoctorDashboardDTO dashboard = iStatistiqueServices.getDoctorDashboard();
+        return ResponseEntity.ok(dashboard);
+    }
 
 }
