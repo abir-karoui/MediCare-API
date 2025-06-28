@@ -27,6 +27,11 @@ public class NotificationController {
     ) {
         return notificationService.getNotifications(pageNo, pageSize);
     }
+    @GetMapping("/unread-count")
+    public ResponseEntity<Integer> getUnreadNotificationCount() {
+        int count = notificationService.getUnreadNotificationCount();
+        return ResponseEntity.ok(count);
+    }
 
 }
 

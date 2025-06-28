@@ -27,6 +27,11 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Query("UPDATE Notification n SET n.prescription = NULL WHERE n.prescription.id = :prescriptionId")
     void nullifyPrescriptionReferences(@Param("prescriptionId") Long prescriptionId);
 
+    int countByUserIdAndReadFalse(Long userId);
+    @Modifying
+    @Query("UPDATE Notification n SET n.read = true WHERE n.user.id = :userId AND n.read = false")
+    void markAllAsReadForUser(@Param("userId") Long userId);
+
 
 
 

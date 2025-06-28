@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import tn.exemple.medicare.entities.auth.User;
 import tn.exemple.medicare.entities.invitation.Invitation;
 
@@ -28,6 +30,7 @@ public class Discussion {
 
     @ManyToOne
     @JoinColumn(name = "user2_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private User user2;
 
     private String lastMessage;

@@ -158,7 +158,6 @@ public class ChatServices implements IChatServices {
 
 
     @Override
-
     public List<Long> getUnreadDiscussionIds() {
         Long currentUserId = authService.getAuthenticatedUserId();
         return chatMessageRepository.findUnreadDiscussionIdsForUser(currentUserId);

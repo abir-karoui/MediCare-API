@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tn.exemple.medicare.configs.AuthService;
 import tn.exemple.medicare.entities.Patient;
 import tn.exemple.medicare.entities.auth.User;
@@ -44,7 +45,7 @@ public class NotificationServices  implements INotificationServices {
         userRepository.save(user);
     }
 
-   @Override
+  /* @Override
    public Page<NotificationResponse> getNotifications(int pageNo, int pageSize) {
        Long userId = authService.getAuthenticatedUserId();
 
@@ -55,8 +56,24 @@ public class NotificationServices  implements INotificationServices {
 
        Page<Notification> notifications = notificationRepository.findByUserId(userId, pageable);
        return notifications.map(notificationMapper::mapToDto);
-   }
-   @Override
+   }*/
+  @Override
+  @Transactional
+  public Page<NotificationResponse> getNotifications(int pageNo, int pageSize) {
+      Long userId = authService.getAuthenticatedUserId();
+
+      User user = userRepository.findById(userId)
+              .orElseThrow(() -> new EntityNotFoundException("User with ID: " + userId + " not found"));
+
+      notificationRepository.markAllAsReadForUser(userId);
+
+      Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, "sentAt"));
+      Page<Notification> notifications = notificationRepository.findByUserId(userId, pageable);
+
+      return notifications.map(notificationMapper::mapToDto);
+  }
+
+    @Override
     public void sendPrescriptionNotificationToPatient(Patient patient, User doctor, Prescription prescription) {
         if (patient.getFcmToken() != null && !patient.getFcmToken().isBlank()) {
             NotificationRequest notif = NotificationRequest.builder()
@@ -98,6 +115,12 @@ public class NotificationServices  implements INotificationServices {
             }
         }
     }
+    @Override
+    public int getUnreadNotificationCount() {
+        Long userId = authService.getAuthenticatedUserId();
+        return notificationRepository.countByUserIdAndReadFalse(userId);
+    }
+
 
 
 

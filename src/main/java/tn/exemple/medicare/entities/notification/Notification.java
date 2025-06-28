@@ -35,6 +35,8 @@ public class Notification {
     private LocalDateTime sentAt;
     @Enumerated(EnumType.STRING)
     private NotificationType type;
+
+    private boolean read = false;
     @ManyToOne
     @JsonIgnore
     @JsonBackReference("user-notification")

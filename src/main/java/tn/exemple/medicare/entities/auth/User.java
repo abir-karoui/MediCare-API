@@ -11,6 +11,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import tn.exemple.medicare.entities.chat.ChatMessage;
 import tn.exemple.medicare.entities.invitation.Invitation;
 import tn.exemple.medicare.entities.notification.Notification;
 import tn.exemple.medicare.entities.prescription.Prescription;
@@ -179,7 +180,14 @@ public  class User implements Serializable , UserDetails , Principal {
 
     @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("receiver-invitation")
-
     private List<Invitation> receivedInvitations ;
 
+   /* @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("sendermsg_id")
+    private List<ChatMessage> sentMessages ;
+
+    @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("receivermsg_id")
+    private List<ChatMessage> receiverMessages ;
+*/
 }

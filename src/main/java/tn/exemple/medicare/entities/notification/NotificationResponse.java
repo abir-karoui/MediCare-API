@@ -2,6 +2,7 @@ package tn.exemple.medicare.entities.notification;
 
 
 import lombok.*;
+import tn.exemple.medicare.entities.invitation.InvitationStatus;
 import tn.exemple.medicare.enums.NotificationType;
 
 import java.time.LocalDateTime;
@@ -22,4 +23,5 @@ public class NotificationResponse {
     private NotificationType type;
     private Long idInvitation;
     private Long idMedicationIntake;
+    private InvitationStatus invitationStatus;
 }
