@@ -20,15 +20,15 @@ import java.util.Optional;
 public interface IUserSevices {
 
 
-    AuthenticationResponse register(Map<String, Object> userMap, MultipartFile photo, MultipartFile medicalCard) throws Exception;
-
+    void  register(Map<String, Object> userMap, MultipartFile photo, MultipartFile medicalCard) throws Exception;
     AuthenticationResponse login(AuthenticationRequest request);
+    void resendActivationCode(String email) throws Exception;
 
     void changePassword(ChangePasswordRequest request , Principal connectedUser);
 
     void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException;
 
-    void activateAccount(String token) throws MessagingException;
+    AuthenticationResponse  activateAccount(String token) throws MessagingException;
 
     void sendValidationEmail(User user) throws MessagingException;
 

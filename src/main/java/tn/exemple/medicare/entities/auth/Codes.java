@@ -26,9 +26,12 @@ public class Codes {
     private LocalDateTime createdAt;
     private LocalDateTime expiredAt;
     private LocalDateTime validateAt;
+    private String userData;
+    @Column(nullable = false)
+    private String email;
 
     @JsonIgnore
     @ManyToOne
-    @JoinColumn(name = "userId" , nullable = false)
+    @JoinColumn(name = "userId", nullable = true)
     private User user;
 }

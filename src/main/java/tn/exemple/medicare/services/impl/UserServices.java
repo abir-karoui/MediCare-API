@@ -40,6 +40,7 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
@@ -59,8 +60,10 @@ public class UserServices implements IUserSevices {
     private final FileUploadImpl  fileUpload;
     private  final AuthService authService;
     private  final IDoctorRepository iDoctorRepository;
+    private final Map<String, Map<String, Object>> tempUserCache = new ConcurrentHashMap<>();
 
-    public AuthenticationResponse register(Map<String, Object> userMap, MultipartFile photo, MultipartFile medicalCard) throws Exception
+
+    /*public AuthenticationResponse register(Map<String, Object> userMap, MultipartFile photo, MultipartFile medicalCard) throws Exception
     {
 
         String roleStr = (String) userMap.get("role");
@@ -99,6 +102,45 @@ public class UserServices implements IUserSevices {
                 .refreshToken(refreshToken)
                 .build();
     }
+*/
+    @Override
+    public void register(Map<String, Object> userMap, MultipartFile photo, MultipartFile medicalCard) throws Exception {
+        String email = (String) userMap.get("email");
+        String roleStr = (String) userMap.get("role");
+
+        if (iUserRepository.existsByEmail(email)) {
+            throw new BusinessException(BusinessErrorCode.EMAIL_ALREADY_EXISTS);
+        }
+
+
+        if (photo != null && !photo.isEmpty()) {
+            userMap.put("photo", fileUpload.uploadImage(photo)); // anciennement "photoUrl"
+        }
+        if (medicalCard != null && !medicalCard.isEmpty()) {
+            userMap.put("medicalCard", fileUpload.uploadImage(medicalCard)); // anciennement "medicalCardUrl"
+        }
+
+
+        // Chiffrer le mot de passe avant de le stocker temporairement
+        String rawPassword = (String) userMap.get("password");
+        userMap.put("password", passwordEncoder.encode(rawPassword));
+
+        // Stocker en cache temporaire (clé = email)
+        tempUserCache.put(email, userMap);
+
+        // Générer le code
+        String code = generateAndSaveCode(email);
+
+        // Envoyer le code par email
+        emailService.sendEmail(
+                email,
+                (String) userMap.get("firstname"),
+                code,
+                "Account Activation",
+                TypeCode.ACTIVATION
+        );
+    }
+
 
     public void sendValidationEmail(User user ) throws MessagingException {
         var newToken = generateAndSaveActivationCode(user);
@@ -110,6 +152,19 @@ public class UserServices implements IUserSevices {
                 TypeCode.ACTIVATION);
 
     }
+    private String generateAndSaveCode(String email) {
+        String generateCode = generateCode(6);
+        Codes codes = Codes.builder()
+                .code(generateCode)
+                .email(email) // <-- très important
+                .typecode(TypeCode.ACTIVATION)
+                .createdAt(LocalDateTime.now())
+                .expiredAt(LocalDateTime.now().plusMinutes(15))
+                .build();
+        codeRepository.save(codes);
+        return generateCode;
+    }
+
     private String generateAndSaveActivationCode(User user ) {
         String generateCode = generateCode(6);
         Codes codes = Codes.builder()
@@ -133,7 +188,7 @@ public class UserServices implements IUserSevices {
         }
         return  codeBuilder.toString();
     }
-    @Override
+   /* @Override
     public void activateAccount(String code) throws MessagingException {
         Codes savedCode = codeRepository.findByCode(code)
                 .orElseThrow(() -> new BusinessException(BusinessErrorCode.CODE_INCORRECT));
@@ -154,6 +209,57 @@ public class UserServices implements IUserSevices {
         savedCode.setValidateAt(LocalDateTime.now());
         codeRepository.save(savedCode);
     }
+*/
+   @Override
+   public AuthenticationResponse activateAccount(String code) throws MessagingException {
+       Codes savedCode = codeRepository.findByCode(code)
+               .orElseThrow(() -> new BusinessException(BusinessErrorCode.CODE_INCORRECT));
+
+       if (savedCode.getExpiredAt().isBefore(LocalDateTime.now())) {
+           throw new BusinessException(BusinessErrorCode.CODE_Expired);
+       }
+
+       String email = savedCode.getEmail(); // ✅ Ce champ doit exister dans Codes
+       if (!tempUserCache.containsKey(email)) {
+           throw new BusinessException(BusinessErrorCode.NOT_FOUND);
+       }
+
+       Map<String, Object> userMap = tempUserCache.remove(email);
+       String roleStr = (String) userMap.get("role");
+       TypeRole role = TypeRole.valueOf(roleStr);
+
+       ObjectMapper objectMapper = new ObjectMapper();
+       User user;
+       if (role == TypeRole.DOCTOR) {
+           user = objectMapper.convertValue(userMap, Doctor.class);
+           ((Doctor) user).setMedicalCard((String) userMap.get("medicalCard"));
+           ((Doctor) user).setMedicalCardVerified(false);
+       } else if (role == TypeRole.PATIENT) {
+           user = objectMapper.convertValue(userMap, Patient.class);
+       } else {
+           user = objectMapper.convertValue(userMap, User.class);
+       }
+
+       user.setEnabled(true);
+       user.setAccountLocked(false);
+       user.setPhoto((String) userMap.get("photo"));
+
+       var savedUser = iUserRepository.save(user);
+
+       savedCode.setUser(savedUser);
+       savedCode.setValidateAt(LocalDateTime.now());
+       codeRepository.save(savedCode);
+
+       var jwtToken = jwtService.generateToken(savedUser);
+       var refreshToken = jwtService.generateRefreshToken(savedUser);
+       saveRefreshToken(savedUser, refreshToken);
+
+       return AuthenticationResponse.builder()
+               .accessToken(jwtToken)
+               .refreshToken(refreshToken)
+               .build();
+   }
+
 
     @Override
     public AuthenticationResponse login(AuthenticationRequest request) {
@@ -480,8 +586,37 @@ public class UserServices implements IUserSevices {
                 .refreshToken(refreshToken)
                 .build();
     }
+    @Override
+    @Transactional
+    public void resendActivationCode(String email) throws Exception {
+        if (!tempUserCache.containsKey(email)) {
+            throw new BusinessException(BusinessErrorCode.NOT_FOUND);
+        }
+
+        Map<String, Object> userMap = tempUserCache.get(email);
+        String firstname = (String) userMap.get("firstname");
+
+        // Supprimer anciens codes (facultatif)
+        codeRepository.deleteAllByEmailAndTypecode(email, TypeCode.ACTIVATION);
+
+        // Générer un nouveau code
+        String newCode = generateCode(6);
+
+        Codes code = Codes.builder()
+                .email(email)
+                .code(newCode)
+                .typecode(TypeCode.ACTIVATION)
+                .createdAt(LocalDateTime.now())
+                .expiredAt(LocalDateTime.now().plusMinutes(15))
+                .build();
+
+        codeRepository.save(code);
+
+        // Renvoyer l'email
+        emailService.sendEmail(email, firstname, newCode, "Account Activation", TypeCode.ACTIVATION);
+    }
+
 
 
 
 }
-

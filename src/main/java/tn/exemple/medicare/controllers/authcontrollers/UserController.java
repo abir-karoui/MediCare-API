@@ -52,18 +52,31 @@ public class UserController {
     }
 
 
-    @PostMapping("/adduser")
 
+
+    @PostMapping("/adduser")
     public ResponseEntity<?> addUser(
             @RequestParam(value = "photo", required = false) MultipartFile photo,
             @RequestParam(value = "medicalCard", required = false) MultipartFile medicalCard,
-            @RequestParam @Valid Map<String, Object> userMap
-
+            @RequestParam Map<String, Object> userMap
     ) throws Exception {
-        AuthenticationResponse user = iUserSevices.register(userMap , photo,medicalCard);
-        SignUpMessage message = new SignUpMessage(user, "An activation code has been sent to your email");
-        return ResponseEntity.accepted().body(message);
+        // Ne retourne plus de token, juste un message de confirmation
+        iUserSevices.register(userMap, photo, medicalCard);
+        return ResponseEntity.accepted().body("An activation code has been sent to your email.");
     }
+
+
+    @GetMapping("/activate-account")
+    public ResponseEntity<?> confirm(@RequestParam String code) throws Exception {
+        AuthenticationResponse response = iUserSevices.activateAccount(code);
+        return ResponseEntity.ok(response); // retourne accessToken et refreshToken
+    }
+    @GetMapping("/resend-code")
+    public ResponseEntity<?> resendActivationCode(@RequestParam String email) throws Exception {
+        iUserSevices.resendActivationCode(email);
+        return ResponseEntity.ok("A new activation code has been sent to your email.");
+    }
+
 
 
 
@@ -72,11 +85,7 @@ public class UserController {
     public ResponseEntity<?> login(@RequestBody @Valid AuthenticationRequest request) {
         return ResponseEntity.ok( iUserSevices.login(request));
     }
-    @GetMapping("/activate-account")
-    public  ResponseEntity<?> confirm(@RequestParam String code) throws MessagingException {
-        iUserSevices.activateAccount(code);
-        return ResponseEntity.ok("Account successfully activated");
-    }
+
     @PatchMapping("/changePassword")
     public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request , Principal connectedUser) {
         iUserSevices.changePassword(request , connectedUser);

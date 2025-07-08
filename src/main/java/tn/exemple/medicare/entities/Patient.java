@@ -18,7 +18,6 @@ import java.util.Set;
 @Setter
 @AllArgsConstructor
 @Entity
-@Table(name = "Patient")
 public class Patient extends User {
 
     private String age ;

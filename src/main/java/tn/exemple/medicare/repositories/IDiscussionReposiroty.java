@@ -30,6 +30,4 @@ ORDER BY d.lastMessageTime DESC
     Page<Discussion> findVisibleDiscussionsForUser(@Param("userId") Long userId, Pageable pageable);
 
 
-
-
 }

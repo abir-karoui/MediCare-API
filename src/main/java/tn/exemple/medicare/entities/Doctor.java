@@ -16,10 +16,9 @@ import java.util.Set;
 
 @Getter
 @Setter
-
 @AllArgsConstructor
 @Entity
-@Table(name = "Doctor")
+
 
 public class Doctor extends User {
 

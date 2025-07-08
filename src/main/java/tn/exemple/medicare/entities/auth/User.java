@@ -11,6 +11,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import tn.exemple.medicare.entities.Doctor;
+import tn.exemple.medicare.entities.Patient;
 import tn.exemple.medicare.entities.chat.ChatMessage;
 import tn.exemple.medicare.entities.invitation.Invitation;
 import tn.exemple.medicare.entities.notification.Notification;
@@ -162,13 +164,6 @@ public  class User implements Serializable , UserDetails , Principal {
     private  List<RefreshToken> refreshTokens;
 
 
-   /* @JsonIgnore
-    @JsonManagedReference
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Prescription> prescriptions;*/
-
-
-
     @JsonIgnore
     @JsonManagedReference("user-notification")
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -181,6 +176,14 @@ public  class User implements Serializable , UserDetails , Principal {
     @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("receiver-invitation")
     private List<Invitation> receivedInvitations ;
+
+
+   /* @JsonIgnore
+    @JsonManagedReference
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Prescription> prescriptions;*/
+
+
 
    /* @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("sendermsg_id")
