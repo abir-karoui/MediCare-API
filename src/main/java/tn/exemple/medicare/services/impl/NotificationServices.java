@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tn.exemple.medicare.configs.AuthService;
+import tn.exemple.medicare.entities.Doctor;
 import tn.exemple.medicare.entities.Patient;
 import tn.exemple.medicare.entities.auth.User;
 import tn.exemple.medicare.entities.chat.ChatMessage;
@@ -19,6 +20,7 @@ import tn.exemple.medicare.entities.notification.NotificationRequest;
 import tn.exemple.medicare.entities.notification.NotificationResponse;
 import tn.exemple.medicare.entities.prescription.Prescription;
 import tn.exemple.medicare.enums.NotificationType;
+import tn.exemple.medicare.enums.TypeRole;
 import tn.exemple.medicare.mappers.NotificationMapper;
 import tn.exemple.medicare.repositories.IUserRepository;
 import tn.exemple.medicare.repositories.NotificationRepository;
@@ -45,18 +47,6 @@ public class NotificationServices  implements INotificationServices {
         userRepository.save(user);
     }
 
-  /* @Override
-   public Page<NotificationResponse> getNotifications(int pageNo, int pageSize) {
-       Long userId = authService.getAuthenticatedUserId();
-
-       User user = userRepository.findById(userId)
-               .orElseThrow(() -> new EntityNotFoundException("User with ID: " + userId + " not found"));
-
-       Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, "sentAt"));
-
-       Page<Notification> notifications = notificationRepository.findByUserId(userId, pageable);
-       return notifications.map(notificationMapper::mapToDto);
-   }*/
   @Override
   @Transactional
   public Page<NotificationResponse> getNotifications(int pageNo, int pageSize) {
@@ -120,6 +110,25 @@ public class NotificationServices  implements INotificationServices {
         Long userId = authService.getAuthenticatedUserId();
         return notificationRepository.countByUserIdAndReadFalse(userId);
     }
+    @Override
+    public void notifyAdminNewDoctor(Doctor doctor) {
+        List<User> admins = userRepository.findAllByRole(TypeRole.ADMIN);
+
+        for (User admin : admins) {
+            Notification notification = Notification.builder()
+                    .title("New Doctor Account")
+                    .body("Dr. " + doctor.fullName() + " has activated their account and is awaiting validation.")
+                    .sentAt(LocalDateTime.now())
+                    .type(NotificationType.ACCOUNT_VERIFICATION)
+                    .user(admin)
+                    .read(false) // Marquer comme non lu
+                    .build();
+
+            notificationRepository.save(notification);
+        }
+    }
+
+
 
 
 

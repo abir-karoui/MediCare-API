@@ -4,5 +4,6 @@ public enum NotificationType {
     REMINDER,
     REQUEST,
     RESPONSE,
-    MEDICATION
+    MEDICATION,
+    ACCOUNT_VERIFICATION
 }

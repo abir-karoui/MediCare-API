@@ -15,39 +15,39 @@ public class AdminServices implements IAdminServices {
     private final IUserRepository iUserRepository;
 
     private final EmailService emailService ;
-    /*@Override
-    public void validateDoctorMedicalCard(Long doctorId) {
-        Doctor doctor = (Doctor) iUserRepository.findById(doctorId)
-                .orElseThrow(() -> new BusinessException(BusinessErrorCode.NOT_FOUND));
-        if (doctor.isMedicalCardVerified()) {
-            throw new BusinessException(BusinessErrorCode.MEDICAL_CARD_ALREADY_VERIFIED);
-        }
 
-        doctor.setMedicalCardVerified(true);
-        iUserRepository.save(doctor);
-    }*/
-    @Override
-    public void validateDoctorMedicalCard(Long doctorId) {
-        Doctor doctor = (Doctor) iUserRepository.findById(doctorId)
-                .orElseThrow(() -> new BusinessException(BusinessErrorCode.NOT_FOUND));
-        if (doctor.isMedicalCardVerified()) {
-            throw new BusinessException(BusinessErrorCode.MEDICAL_CARD_ALREADY_VERIFIED);
-        }
+   @Override
+   public void processDoctorMedicalCard(Long doctorId, boolean accept) throws MessagingException {
+       Doctor doctor = (Doctor) iUserRepository.findById(doctorId)
+               .orElseThrow(() -> new BusinessException(BusinessErrorCode.NOT_FOUND));
 
-        doctor.setMedicalCardVerified(true);
-        iUserRepository.save(doctor);
+       if (accept) {
+           doctor.setMedicalCardVerified(true);
+           doctor.setAccountLocked(false);
 
-        // ✅ Envoi de l'email simple
-        try {
-            emailService.sendSimpleMessage(
-                    doctor.getEmail(),
-                    doctor.getFirstname(),
-                    "Medical Card Validation",
-                    "Your medical card has been successfully validated. You can now log in to your account."
-            );
-        } catch (MessagingException e) {
-            e.printStackTrace();
-        }
-    }
+           iUserRepository.save(doctor);
+
+           emailService.sendSimpleMessage(
+                   doctor.getEmail(),
+                   doctor.getFirstname(),
+                   "Medical Card Validation",
+                   "Your medical card has been successfully validated. You can now log in to your account."
+           );
+
+       } else {
+           // rejet
+           doctor.setAccountLocked(true);
+           iUserRepository.save(doctor);
+
+           emailService.sendSimpleMessage(
+                   doctor.getEmail(),
+                   doctor.getFirstname(),
+                   "Medical Card Validation Rejected",
+                   "Unfortunately, after verification of your medical card, your account has been rejected. Please check your information carefully."
+           );
+
+       }
+   }
+
 
 }

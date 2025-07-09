@@ -31,8 +31,6 @@ import java.util.stream.Collectors;
 public class PrescriptionServices implements IPrescriptionServices {
     private final IUserRepository iUserRepository;
     private final IPatientRepository iPatientRepository;
-
-    private final IDoctorRepository iDoctorRepository;
     private final IPrescriptionRepository iPrescriptionRepository;
     private final IDoseRepository iDoseRepository;
     private final MedicationServices medicationServices;
@@ -40,7 +38,6 @@ public class PrescriptionServices implements IPrescriptionServices {
     private  final PrescriptionMapper prescriptionMapper;
     private  final AuthService authService;
     private  final NotificationRepository notificationRepository;
-    private  final InvitationServices invitationServices;
 
     private  final  IMedicationIntakeRepository iMedicationIntakeRepository;
 

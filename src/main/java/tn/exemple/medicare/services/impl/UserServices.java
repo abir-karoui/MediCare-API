@@ -32,6 +32,7 @@ import tn.exemple.medicare.exceptions.BusinessException;
 import tn.exemple.medicare.fileServer.FileUploadImpl;
 import tn.exemple.medicare.mappers.UserMapper;
 import tn.exemple.medicare.repositories.*;
+import tn.exemple.medicare.services.INotificationServices;
 import tn.exemple.medicare.services.IUserSevices;
 
 import java.io.IOException;
@@ -59,50 +60,9 @@ public class UserServices implements IUserSevices {
     private final RefreshTokenRepositroty refreshTokenRepositroty;
     private final FileUploadImpl  fileUpload;
     private  final AuthService authService;
-    private  final IDoctorRepository iDoctorRepository;
+    private  final INotificationServices notificationServices;
     private final Map<String, Map<String, Object>> tempUserCache = new ConcurrentHashMap<>();
 
-
-    /*public AuthenticationResponse register(Map<String, Object> userMap, MultipartFile photo, MultipartFile medicalCard) throws Exception
-    {
-
-        String roleStr = (String) userMap.get("role");
-        TypeRole role = TypeRole.valueOf(roleStr);
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        User user;
-        if (role == TypeRole.DOCTOR) {
-            user = objectMapper.convertValue(userMap, Doctor.class);
-        } else if (role == TypeRole.PATIENT) {
-            user = objectMapper.convertValue(userMap, Patient.class);
-        } else {
-            user = objectMapper.convertValue(userMap, User.class);
-        }
-        if (iUserRepository.existsByEmail(user.getEmail())) {
-            throw new BusinessException(BusinessErrorCode.EMAIL_ALREADY_EXISTS);
-        }
-
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setAccountLocked(false);
-        user.setEnabled(false);
-        user.setPhoto(photo != null && !photo.isEmpty() ? fileUpload.uploadImage(photo) : null);
-
-        if (user instanceof Doctor doctor) {
-            doctor.setMedicalCard(medicalCard != null && !medicalCard.isEmpty() ? fileUpload.uploadImage(medicalCard) : null);
-            doctor.setMedicalCardVerified(false);
-        }
-
-        var savedUser = iUserRepository.save(user);
-        var jwtToken = jwtService.generateToken(savedUser);
-        var refreshToken = jwtService.generateRefreshToken(savedUser);
-        saveRefreshToken(savedUser, refreshToken);
-        sendValidationEmail(savedUser);
-        return AuthenticationResponse.builder()
-                .accessToken(jwtToken)
-                .refreshToken(refreshToken)
-                .build();
-    }
-*/
     @Override
     public void register(Map<String, Object> userMap, MultipartFile photo, MultipartFile medicalCard) throws Exception {
         String email = (String) userMap.get("email");
@@ -188,38 +148,20 @@ public class UserServices implements IUserSevices {
         }
         return  codeBuilder.toString();
     }
-   /* @Override
-    public void activateAccount(String code) throws MessagingException {
-        Codes savedCode = codeRepository.findByCode(code)
-                .orElseThrow(() -> new BusinessException(BusinessErrorCode.CODE_INCORRECT));
 
-        if (savedCode.getTypecode() != TypeCode.ACTIVATION) {
-            throw new BusinessException(BusinessErrorCode.CODE_Expired);
-        }
-
-        if (LocalDateTime.now().isAfter(savedCode.getExpiredAt())) {
-            sendValidationEmail(savedCode.getUser());
-            throw new BusinessException(BusinessErrorCode.CODE_INCORRECT);
-        }
-
-        var user = iUserRepository.findById(savedCode.getUser().getId())
-                .orElseThrow(() -> new BusinessException(BusinessErrorCode.NOT_FOUND));
-        user.setEnabled(true);
-        iUserRepository.save(user);
-        savedCode.setValidateAt(LocalDateTime.now());
-        codeRepository.save(savedCode);
-    }
-*/
    @Override
    public AuthenticationResponse activateAccount(String code) throws MessagingException {
+       // Vérifie si le code existe
        Codes savedCode = codeRepository.findByCode(code)
                .orElseThrow(() -> new BusinessException(BusinessErrorCode.CODE_INCORRECT));
 
+       // Vérifie la date d'expiration du code
        if (savedCode.getExpiredAt().isBefore(LocalDateTime.now())) {
            throw new BusinessException(BusinessErrorCode.CODE_Expired);
        }
 
-       String email = savedCode.getEmail(); // ✅ Ce champ doit exister dans Codes
+       // Récupère l'utilisateur temporaire en cache à partir de l'email
+       String email = savedCode.getEmail();
        if (!tempUserCache.containsKey(email)) {
            throw new BusinessException(BusinessErrorCode.NOT_FOUND);
        }
@@ -230,26 +172,38 @@ public class UserServices implements IUserSevices {
 
        ObjectMapper objectMapper = new ObjectMapper();
        User user;
+
        if (role == TypeRole.DOCTOR) {
+           // Création d'un doctor
            user = objectMapper.convertValue(userMap, Doctor.class);
            ((Doctor) user).setMedicalCard((String) userMap.get("medicalCard"));
-           ((Doctor) user).setMedicalCardVerified(false);
+           ((Doctor) user).setMedicalCardVerified(false); // En attente de vérification
+
        } else if (role == TypeRole.PATIENT) {
            user = objectMapper.convertValue(userMap, Patient.class);
        } else {
            user = objectMapper.convertValue(userMap, User.class);
        }
 
+       // Initialisation des champs communs
        user.setEnabled(true);
        user.setAccountLocked(false);
        user.setPhoto((String) userMap.get("photo"));
 
+       // Sauvegarde du nouvel utilisateur
        var savedUser = iUserRepository.save(user);
 
+       // Sauvegarde des infos du code
        savedCode.setUser(savedUser);
        savedCode.setValidateAt(LocalDateTime.now());
        codeRepository.save(savedCode);
 
+       if (role == TypeRole.DOCTOR) {
+           notificationServices.notifyAdminNewDoctor((Doctor) savedUser);
+       }
+
+
+       // Génération des tokens
        var jwtToken = jwtService.generateToken(savedUser);
        var refreshToken = jwtService.generateRefreshToken(savedUser);
        saveRefreshToken(savedUser, refreshToken);
@@ -259,6 +213,7 @@ public class UserServices implements IUserSevices {
                .refreshToken(refreshToken)
                .build();
    }
+
 
 
     @Override

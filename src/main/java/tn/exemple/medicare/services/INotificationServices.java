@@ -1,6 +1,7 @@
 package tn.exemple.medicare.services;
 
 import org.springframework.data.domain.Page;
+import tn.exemple.medicare.entities.Doctor;
 import tn.exemple.medicare.entities.Patient;
 import tn.exemple.medicare.entities.auth.User;
 import tn.exemple.medicare.entities.chat.ChatMessage;
@@ -17,4 +18,5 @@ public interface INotificationServices {
     void sendPrescriptionNotificationToPatient(Patient patient, User doctor, Prescription prescription);
     void sendMsgNotif(ChatMessage chatMessage);
     int getUnreadNotificationCount();
+    void notifyAdminNewDoctor(Doctor doctor);
 }
