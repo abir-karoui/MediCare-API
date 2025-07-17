@@ -84,6 +84,10 @@ public class DiseasesServices implements IDiseases {
         iDiseasesRepository.deleteById(id);
 
     }
+    @Override
+    public long countDiseases() {
+        return iDiseasesRepository.count();
+    }
 
 
 }

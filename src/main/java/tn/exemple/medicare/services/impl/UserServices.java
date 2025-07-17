@@ -32,6 +32,7 @@ import tn.exemple.medicare.exceptions.BusinessException;
 import tn.exemple.medicare.fileServer.FileUploadImpl;
 import tn.exemple.medicare.mappers.UserMapper;
 import tn.exemple.medicare.repositories.*;
+import tn.exemple.medicare.services.IActivityLogService;
 import tn.exemple.medicare.services.INotificationServices;
 import tn.exemple.medicare.services.IUserSevices;
 
@@ -61,6 +62,9 @@ public class UserServices implements IUserSevices {
     private final FileUploadImpl  fileUpload;
     private  final AuthService authService;
     private  final INotificationServices notificationServices;
+
+    private final IActivityLogService activityLogService;
+
     private final Map<String, Map<String, Object>> tempUserCache = new ConcurrentHashMap<>();
 
     @Override
@@ -192,6 +196,16 @@ public class UserServices implements IUserSevices {
 
        // Sauvegarde du nouvel utilisateur
        var savedUser = iUserRepository.save(user);
+       String fullName = savedUser.getFirstname() + " " + savedUser.getLastname();
+
+
+       activityLogService.logActivity(
+               "New registration",
+               fullName,
+               fullName + " has registered as " + role
+       );
+
+
 
        // Sauvegarde des infos du code
        savedCode.setUser(savedUser);
@@ -241,7 +255,17 @@ public class UserServices implements IUserSevices {
             Long extractedUserId = jwtService.extractUserId(jwtToken);
             System.out.println("Extracted User ID from JWT: " + extractedUserId);
             saveRefreshToken(user, refreshToken);
+            activityLogService.logActivity(
+                    "Login",
+                    user.fullName(),
+                    " Successfully logged into the platform "
+            );
             return AuthenticationResponse.builder().accessToken(jwtToken).refreshToken(refreshToken).build();
+
+
+
+
+
 
         } catch (DisabledException e) {
             throw new BusinessException(BusinessErrorCode.ACCOUNT_DISABLED);

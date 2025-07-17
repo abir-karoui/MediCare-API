@@ -38,31 +38,27 @@ import java.util.Optional;
                     .responseTimeout(Duration.ofSeconds(60)); // ⏱ Timeout de 5 secondes
 
             this.webClient = webClientBuilder
-                    .baseUrl("https://api-bdpm-graphql.axel-op.fr/graphql")
+                    .baseUrl("http://localhost:4000/graphql")
                     .clientConnector(new ReactorClientHttpConnector(httpClient)) // 🔗 Ajout du timeout ici
                     .build();
             //this.webClient = webClientBuilder.baseUrl("https://api-bdpm-graphql.axel-op.fr/graphql").build();
         } //WebClient.Builder pour configurer l'URL de base de l'API GraphQL
 
-        @Override
-        //mono traja 0 ou 1 , ici trajaa 1 liste contient ts medicament avec name
+        @Override //mono traja 0 ou 1 , ici trajaa 1 liste contient ts medicament avec name
         public Mono<List<Medication>> searchMedicationsByName(String name) {
             String graphqlQuery = """
             query {
               medicaments(denomination: { contains_one_of: ["%s"] }) {
                 denomination
-            
               }
             }
             """.formatted(name);
-
             return webClient.post()//preparer requette ili bch nabaatha l API
                     .bodyValue(Map.of("query", graphqlQuery)) //huni bch nabaath requette ili snaatha f body
                     .retrieve()// Exécute la requête
                     .bodyToMono(JsonNode.class) // Convertit la réponse en JSON
                     .map(this::mapToMedications); //Transforme le JSON en liste de médicaments
-        }
-        @Override
+        }@Override
         public Mono<List<Medication>> getAllMedications(int page, int size) {
             String graphqlQuery = """
         query {
@@ -139,10 +135,6 @@ import java.util.Optional;
             return iMedicationRepository.deleteMedicationsByDenomination(denomination);
         }
 
-        @Override
-        public void deleteAllMedications() {
-            iMedicationRepository.deleteAll();
-        }
 
         @Override
         public Page<Medication> getMedications(int pageNo, int pageSize) {

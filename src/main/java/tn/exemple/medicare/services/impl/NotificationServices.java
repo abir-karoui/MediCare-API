@@ -121,7 +121,8 @@ public class NotificationServices  implements INotificationServices {
                     .sentAt(LocalDateTime.now())
                     .type(NotificationType.ACCOUNT_VERIFICATION)
                     .user(admin)
-                    .read(false) // Marquer comme non lu
+                    .doctor(doctor)
+                    .read(false)
                     .build();
 
             notificationRepository.save(notification);

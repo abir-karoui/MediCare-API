@@ -19,7 +19,7 @@ public interface IMedicationServices  {
     Medication partialUpdate(Long id , Medication medications) ;
     void  deleteMedicationsById(Long id);
     List<Medication> deleteMedicationsByDenomination(String denomination);
-    void deleteAllMedications();
+
     Page<Medication> getMedications (int pageNo, int pageSize) ;
 
 }

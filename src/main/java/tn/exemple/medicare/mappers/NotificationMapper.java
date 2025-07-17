@@ -16,14 +16,17 @@ public class NotificationMapper {
 
         if (notification.getInvitation() != null) {
             response.setIdInvitation(notification.getInvitation().getId());
-            response.setInvitationStatus(notification.getInvitation().getStatus()); // Important
+            response.setInvitationStatus(notification.getInvitation().getStatus());
         }
 
         if (notification.getMedicationIntake() != null) {
             response.setIdMedicationIntake(notification.getMedicationIntake().getId());
         }
 
+        if (notification.getDoctor() != null) {
+            response.setDoctorId(notification.getDoctor().getId());
+        }
+
         return response;
     }
-
 }

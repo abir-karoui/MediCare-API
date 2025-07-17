@@ -14,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tn.exemple.medicare.configs.JwtService;
+import tn.exemple.medicare.configs.LoggableAction;
 import tn.exemple.medicare.configs.UserDetailsServices;
 import tn.exemple.medicare.entities.Doctor;
 import tn.exemple.medicare.entities.Patient;
@@ -60,7 +61,6 @@ public class UserController {
             @RequestParam(value = "medicalCard", required = false) MultipartFile medicalCard,
             @RequestParam Map<String, Object> userMap
     ) throws Exception {
-        // Ne retourne plus de token, juste un message de confirmation
         iUserSevices.register(userMap, photo, medicalCard);
         return ResponseEntity.accepted().body("An activation code has been sent to your email.");
     }
@@ -69,16 +69,13 @@ public class UserController {
     @GetMapping("/activate-account")
     public ResponseEntity<?> confirm(@RequestParam String code) throws Exception {
         AuthenticationResponse response = iUserSevices.activateAccount(code);
-        return ResponseEntity.ok(response); // retourne accessToken et refreshToken
+        return ResponseEntity.ok(response);
     }
     @GetMapping("/resend-code")
     public ResponseEntity<?> resendActivationCode(@RequestParam String email) throws Exception {
         iUserSevices.resendActivationCode(email);
         return ResponseEntity.ok("A new activation code has been sent to your email.");
     }
-
-
-
 
 
     @PostMapping("/login")

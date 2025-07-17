@@ -4,15 +4,20 @@ import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.exemple.medicare.entities.Doctor;
+import tn.exemple.medicare.entities.Patient;
 import tn.exemple.medicare.exceptions.BusinessErrorCode;
 import tn.exemple.medicare.exceptions.BusinessException;
+import tn.exemple.medicare.repositories.IAdminRepository;
 import tn.exemple.medicare.repositories.IUserRepository;
 import tn.exemple.medicare.services.IAdminServices;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class AdminServices implements IAdminServices {
     private final IUserRepository iUserRepository;
+    private final IAdminRepository iAdminRepository;
 
     private final EmailService emailService ;
 
@@ -35,9 +40,10 @@ public class AdminServices implements IAdminServices {
            );
 
        } else {
-           // rejet
+          /* doctor.setMedicalCardVerified(false);
            doctor.setAccountLocked(true);
-           iUserRepository.save(doctor);
+           iUserRepository.save(doctor);*/
+
 
            emailService.sendSimpleMessage(
                    doctor.getEmail(),
@@ -45,9 +51,21 @@ public class AdminServices implements IAdminServices {
                    "Medical Card Validation Rejected",
                    "Unfortunately, after verification of your medical card, your account has been rejected. Please check your information carefully."
            );
+           iUserRepository.delete(doctor);
 
        }
    }
+    @Override
+    public List<Doctor> getAllDoctors() {
+        return iAdminRepository.findAllDoctors();
+    }
+
+    @Override
+    public List<Patient> getAllPatient() {
+        return iAdminRepository.findAllPatients();
+    }
+
+
 
 
 }

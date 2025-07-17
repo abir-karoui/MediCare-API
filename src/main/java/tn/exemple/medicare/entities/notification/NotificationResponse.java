@@ -24,4 +24,6 @@ public class NotificationResponse {
     private Long idInvitation;
     private Long idMedicationIntake;
     private InvitationStatus invitationStatus;
+    private Long doctorId;
+
 }

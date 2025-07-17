@@ -12,6 +12,6 @@ public interface IDiseases {
     Diseases Update(Long id , Diseases diseases) ;
     void deleteAllDiseases();
     void  deleteDiseasesById(Long id);
-
+    long countDiseases();
 
 }

@@ -11,7 +11,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Data
+//@Data
 @Table(name = "Diseases")
 @Getter
 @Setter

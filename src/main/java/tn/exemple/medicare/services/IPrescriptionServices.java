@@ -8,8 +8,8 @@ import java.util.List;
 public interface IPrescriptionServices {
 
     Prescription createPrescription(PrescriptionDto prescriptionDto);
-   List<Prescription> getPrescriptions();
-     List<Prescription> getInactivePrescriptions();
+    List<Prescription> getPrescriptions();
+    List<Prescription> getInactivePrescriptions();
 
     Prescription getPrescriptionById(Long prescriptionId );
     void deletePrescription(Long prescriptionId);

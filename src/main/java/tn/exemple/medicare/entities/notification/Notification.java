@@ -8,6 +8,7 @@ import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import tn.exemple.medicare.entities.Doctor;
 import tn.exemple.medicare.entities.auth.User;
 import tn.exemple.medicare.entities.invitation.Invitation;
 import tn.exemple.medicare.entities.prescription.Dose;
@@ -59,6 +60,13 @@ public class Notification {
     @JoinColumn(name = "medicationIntake_id", nullable = true)
     @OnDelete(action = OnDeleteAction.SET_NULL)
     private MedicationIntake medicationIntake;
+
+
+    @ManyToOne
+    @JsonIgnore
+    @JoinColumn(name = "doctor_id", nullable = true)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    private Doctor doctor;
 
 
 

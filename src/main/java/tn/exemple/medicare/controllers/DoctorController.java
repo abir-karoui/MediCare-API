@@ -3,6 +3,7 @@ package tn.exemple.medicare.controllers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tn.exemple.medicare.configs.LoggableAction;
 import tn.exemple.medicare.entities.Doctor;
 import tn.exemple.medicare.entities.dto.PrescriptionDto;
 import tn.exemple.medicare.entities.prescription.Prescription;
@@ -15,6 +16,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DoctorController {
     private final IDoctor iDoctor;
+    @LoggableAction(
+            title = "Prescription created",
+            description = "add new prescption"
+    )
     @PostMapping("/createPrescriptionForPatient/{patientId}")
     public Prescription createPrescriptionForPatient(@PathVariable Long patientId, @RequestBody PrescriptionDto prescriptionDto) {
         return iDoctor.createPrescriptionForPatient(patientId, prescriptionDto);

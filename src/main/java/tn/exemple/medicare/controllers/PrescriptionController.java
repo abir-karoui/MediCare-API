@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tn.exemple.medicare.configs.LoggableAction;
 import tn.exemple.medicare.entities.dto.PrescriptionDto;
 import tn.exemple.medicare.entities.prescription.MedicationRequest;
 import tn.exemple.medicare.services.IGeminiService;
@@ -20,6 +21,11 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PrescriptionController {
     private final IPrescriptionServices prescriptionServices;
+
+    @LoggableAction(
+            title = "Prescription created",
+            description = "add new prescption"
+    )
     @PostMapping("/add")
     @ResponseStatus(HttpStatus.CREATED)
     public Prescription addPrescription(@RequestBody PrescriptionDto prescriptionDto) {
