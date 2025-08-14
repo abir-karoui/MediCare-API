@@ -13,6 +13,7 @@ import tn.exemple.medicare.entities.notification.Notification;
 import tn.exemple.medicare.entities.prescription.MedicationIntake;
 import tn.exemple.medicare.entities.prescription.Prescription;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -31,6 +32,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Modifying
     @Query("UPDATE Notification n SET n.read = true WHERE n.user.id = :userId AND n.read = false")
     void markAllAsReadForUser(@Param("userId") Long userId);
+    void deleteBySentAtBefore(LocalDateTime dateTime);
 
 
 

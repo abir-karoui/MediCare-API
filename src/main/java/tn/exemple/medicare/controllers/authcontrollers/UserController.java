@@ -98,6 +98,7 @@ public class UserController {
         iUserSevices.requestPasswordReset(email);
         return ResponseEntity.ok("A code to reset your password has been sent to your email");
     }
+
     @PostMapping("/verify-code")
     public ResponseEntity<String> verifyResetCode(@RequestParam String email, @RequestParam String code) {
         boolean isValid = iUserSevices.verifyResetCode(email, code);

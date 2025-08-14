@@ -10,7 +10,6 @@ public enum BusinessErrorCode {
 
     NO_CODE(0, NOT_IMPLEMENTED, "NO code" ),
     NOT_FOUND(3000, NOT_IMPLEMENTED, "User not found" ),
-
     INCORRECT_CURRENT_PASSWORD(1000, BAD_REQUEST, "Current password is incorrect"),
     NEW_PASSWORD_DOSES_NOT_MATCH(1001, BAD_REQUEST, "New password does not match"),
     INCORRECT_PASSWORD(1002, BAD_REQUEST, "Password is incorrect"),

@@ -215,8 +215,6 @@ public class UserServices implements IUserSevices {
        if (role == TypeRole.DOCTOR) {
            notificationServices.notifyAdminNewDoctor((Doctor) savedUser);
        }
-
-
        // Génération des tokens
        var jwtToken = jwtService.generateToken(savedUser);
        var refreshToken = jwtService.generateRefreshToken(savedUser);
@@ -227,16 +225,12 @@ public class UserServices implements IUserSevices {
                .refreshToken(refreshToken)
                .build();
    }
-
-
-
     @Override
     public AuthenticationResponse login(AuthenticationRequest request) {
         try {
             var auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
-
             var user = ((User)auth.getPrincipal());
 
             if (user instanceof Doctor) {
@@ -245,8 +239,6 @@ public class UserServices implements IUserSevices {
                     throw new BusinessException(BusinessErrorCode.MEDICAL_CARD_NOT_VERIFIED);
                 }
             }
-
-
             var claims = new HashMap<String, Object>();
             claims.put("fullName" , user.fullName());
             claims.put("userId", user.getId());
@@ -261,12 +253,6 @@ public class UserServices implements IUserSevices {
                     " Successfully logged into the platform "
             );
             return AuthenticationResponse.builder().accessToken(jwtToken).refreshToken(refreshToken).build();
-
-
-
-
-
-
         } catch (DisabledException e) {
             throw new BusinessException(BusinessErrorCode.ACCOUNT_DISABLED);
         }catch (BadCredentialsException e) {
@@ -388,32 +374,37 @@ public class UserServices implements IUserSevices {
     public void deleteAllUser() {
         iUserRepository.deleteAll();
     }
-
-    public void requestPasswordReset(String email) throws MessagingException { //hedhi bch nlawej user b mail w nabaath token ctt
+    @Override
+    public void requestPasswordReset(String email) throws MessagingException {
+        // Récupération de l'utilisateur
         User user = iUserRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(BusinessErrorCode.NOT_FOUND));
+
+        // Génération du code de réinitialisation
         String generateCode = generateCode(6);
+
+        // Création et sauvegarde de l'entité Codes
         Codes codes = Codes.builder()
                 .code(generateCode)
                 .typecode(TypeCode.RESET)
                 .createdAt(LocalDateTime.now())
                 .expiredAt(LocalDateTime.now().plusMinutes(15))
                 .user(user)
+                .email(user.getEmail()) // ⚠️ Assure que email n'est pas null
                 .build();
         codeRepository.save(codes);
-        sendResetEmail(user , generateCode);
-    }
-    public void sendResetEmail(User user , String code) throws MessagingException {
-        var newToken = generateAndSaveActivationCode(user);
+
+        // Envoi de l'email avec le même code
         emailService.sendEmail(
                 user.getEmail(),
                 user.getUsername(),
-                newToken,
-                "Password Reset" ,
-                TypeCode.RESET);
-
+                generateCode,
+                "Password Reset",
+                TypeCode.RESET
+        );
     }
 
+    @Override
     public boolean verifyResetCode(String email, String code) {
         User user = iUserRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(BusinessErrorCode.NOT_FOUND));
@@ -426,6 +417,7 @@ public class UserServices implements IUserSevices {
         }
         return true;
     }
+    @Override
     public void resetPassword(String email, String code, String newPassword) {
         User user = iUserRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(BusinessErrorCode.NOT_FOUND));

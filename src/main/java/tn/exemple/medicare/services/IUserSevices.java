@@ -33,7 +33,7 @@ public interface IUserSevices {
     void sendValidationEmail(User user) throws MessagingException;
 
     void requestPasswordReset(String email) throws MessagingException;
-    void sendResetEmail(User user , String code) throws MessagingException;
+  //  void sendResetEmail(User user , String code) throws MessagingException;
     //void resetPassword(String token, String newPassword);
     boolean verifyResetCode(String email, String code);
     void resetPassword(String email, String code, String newPassword);
