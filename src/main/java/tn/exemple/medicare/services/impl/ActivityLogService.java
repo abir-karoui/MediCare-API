@@ -16,8 +16,16 @@ import tn.exemple.medicare.entities.notification.NotificationResponse;
 import tn.exemple.medicare.repositories.ActivityLogRepository;
 import tn.exemple.medicare.services.IActivityLogService;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.TextStyle;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import java.util.LinkedHashMap;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +50,38 @@ public class ActivityLogService implements IActivityLogService {
         Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, "timestamp"));
 
         return activityLogRepository.findAll(pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<LocalDate, Long> getLoginStatsLastWeek() {
+        LocalDate today = LocalDate.now();
+        LocalDate weekAgo = today.minusDays(6); // dernière semaine
+
+        LocalDateTime startDateTime = weekAgo.atStartOfDay();
+        LocalDateTime endDateTime = today.atTime(LocalTime.MAX);
+
+        // Récupérer toutes les activités Login de la dernière semaine
+        List<ActivityLog> logs = activityLogRepository.findByTitleAndTimestampBetween(
+                "Login", startDateTime, endDateTime
+        );
+
+        // Grouper par date et compter
+        Map<LocalDate, Long> stats = logs.stream()
+                .collect(Collectors.groupingBy(
+                        log -> log.getTimestamp().toLocalDate(),
+                        LinkedHashMap::new,
+                        Collectors.counting()
+                ));
+
+        // Assurer que tous les jours de la semaine apparaissent (même si 0 login)
+        Map<LocalDate, Long> completeStats = new LinkedHashMap<>();
+        for (int i = 0; i <= 6; i++) {
+            LocalDate date = weekAgo.plusDays(i);
+            completeStats.put(date, stats.getOrDefault(date, 0L));
+        }
+
+        return completeStats;
     }
 
 

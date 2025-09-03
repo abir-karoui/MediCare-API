@@ -1,5 +1,5 @@
 package tn.exemple.medicare.services.impl;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -27,13 +27,13 @@ public class GeminiService implements IGeminiService {
 
     @Override
     public String checkInteractions(String userPrompt) {
-        String url = "https://openrouter.ai/api/v1/chat/completions";
+        String url = "https://openrouter.ai/api/v1/chat/completions"; // ✅ bon endpoint
 
         // Corps de la requête
         Map<String, Object> body = new HashMap<>();
-        body.put("model", "deepseek/deepseek-chat-v3-0324:free");
+        body.put("model", "google/gemini-2.5-flash-image-preview:free");
 
-        List<Map<String, String>> messages = new ArrayList<>();
+        List<Map<String, Object>> messages = new ArrayList<>();
         messages.add(Map.of(
                 "role", "user",
                 "content", userPrompt
@@ -44,33 +44,38 @@ public class GeminiService implements IGeminiService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
-        headers.add("HTTP-Referer", "https://votresite.com"); // facultatif
-        headers.add("X-Title", "MediCare App"); // facultatif
+        headers.add("HTTP-Referer", "http://localhost:8080"); // 👈 ou ton domaine
+        headers.add("X-Title", "MediCare App");
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
         try {
-            ResponseEntity<Map> response = restTemplate.exchange(
+            // Récupérer la réponse brute en String
+            ResponseEntity<String> response = restTemplate.exchange(
                     url,
                     HttpMethod.POST,
                     request,
-                    Map.class
+                    String.class
             );
 
-            Map<String, Object> responseBody = response.getBody();
-            if (responseBody != null && responseBody.containsKey("choices")) {
-                List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
-                if (!choices.isEmpty()) {
-                    Map<String, Object> choice = choices.get(0);
-                    Map<String, Object> message = (Map<String, Object>) choice.get("message");
-                    String content = (String) message.get("content");
-                    return content;
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                ObjectMapper mapper = new ObjectMapper();
+                Map<String, Object> responseBody = mapper.readValue(response.getBody(), Map.class);
+
+                if (responseBody.containsKey("choices")) {
+                    List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
+                    if (!choices.isEmpty()) {
+                        Map<String, Object> choice = choices.get(0);
+                        Map<String, Object> message = (Map<String, Object>) choice.get("message");
+                        return (String) message.get("content");
+                    }
                 }
             }
-            return "No response from DeepSeek.";
+
+            return "No response from Gemini.";
         } catch (Exception e) {
             e.printStackTrace();
-            return "Error calling DeepSeek API: " + e.getMessage();
+            return "Error calling Gemini API: " + e.getMessage();
         }
     }
 
@@ -91,10 +96,8 @@ public class GeminiService implements IGeminiService {
                 "-OK: no interaction detected.\n" +
                 "Do not explain. Do not analyze. Do not reason. Just give the final answer in one line.";
 
-
-
-
-
         return checkInteractions(prompt);
     }
 }
+
+

@@ -59,6 +59,7 @@ public class ChatController {
 
     }
     @MessageMapping("/chat.private")
+    @Transactional
     public void sendPrivate(@Payload ChatMessageDto messageDto, Principal principal) {
         if (principal != null) {
             String senderEmail = principal.getName();

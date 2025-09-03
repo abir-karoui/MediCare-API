@@ -23,8 +23,8 @@ public class PrescriptionController {
     private final IPrescriptionServices prescriptionServices;
 
     @LoggableAction(
-            title = "Prescription created",
-            description = "add new prescption"
+            title = "Prescription Created",
+            description = "Add new prescription for a patient"
     )
     @PostMapping("/add")
     @ResponseStatus(HttpStatus.CREATED)

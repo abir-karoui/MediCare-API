@@ -17,9 +17,10 @@ import java.util.List;
 public class DoctorController {
     private final IDoctor iDoctor;
     @LoggableAction(
-            title = "Prescription created",
-            description = "add new prescption"
+            title = "Prescription Created",
+            description = "Add new prescription for a patient"
     )
+
     @PostMapping("/createPrescriptionForPatient/{patientId}")
     public Prescription createPrescriptionForPatient(@PathVariable Long patientId, @RequestBody PrescriptionDto prescriptionDto) {
         return iDoctor.createPrescriptionForPatient(patientId, prescriptionDto);

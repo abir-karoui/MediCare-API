@@ -9,9 +9,13 @@ import tn.exemple.medicare.entities.statistic.ArchivedMedicationStatsResponse;
 import tn.exemple.medicare.entities.statistic.DoctorDashboardDTO;
 import tn.exemple.medicare.entities.statistic.MedicationStatsResponse;
 import tn.exemple.medicare.entities.statistic.TodayPatientSummary;
+import tn.exemple.medicare.services.IActivityLogService;
 import tn.exemple.medicare.services.IStatistiqueServices;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -19,6 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class StatistiquesContollers {
     private final IStatistiqueServices iStatistiqueServices;
+    private final IActivityLogService activityLogService;
 
     @GetMapping("/prescriptions")
     public ResponseEntity<List<MedicationStatsResponse>> getStatsForCurrentUser() {
@@ -38,5 +43,19 @@ public class StatistiquesContollers {
         DoctorDashboardDTO dashboard = iStatistiqueServices.getDoctorDashboard();
         return ResponseEntity.ok(dashboard);
     }
+    @GetMapping("/login/last-week")
+    public ResponseEntity<Map<LocalDate, Long>> getLoginStatsLastWeek() {
+        Map<LocalDate, Long> stats = activityLogService.getLoginStatsLastWeek();
+        return ResponseEntity.ok(stats);
+    }
 
+    @GetMapping("/top-doctors")
+    public Map<String, Integer> getTopDoctors() {
+        return iStatistiqueServices.getTopDoctors();
+    }
+
+    @GetMapping("/top-chronicdiseases")
+    public Map<String, Integer> getTop3ChronicDiseases() {
+        return iStatistiqueServices.getTop3ChronicDiseases();
+    }
 }

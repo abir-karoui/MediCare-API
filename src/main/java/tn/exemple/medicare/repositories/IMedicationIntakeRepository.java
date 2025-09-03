@@ -19,6 +19,14 @@ public interface IMedicationIntakeRepository extends JpaRepository<MedicationInt
     List<MedicationIntake> findByPatientAndTakenFalseOrderByDateDescTimeToTakeAsc(Patient patient);
 
 
+    @Query("SELECT m FROM MedicationIntake m " +
+            "WHERE m.date = :today " +
+            "AND m.timeToTake BETWEEN :start AND :end " +
+            "AND m.notified = false")
+    List<MedicationIntake> findPendingIntakes(
+            @Param("today") LocalDate today,
+            @Param("start") LocalTime start,
+            @Param("end") LocalTime end);
 
 
 }

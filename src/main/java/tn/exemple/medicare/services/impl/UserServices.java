@@ -199,11 +199,13 @@ public class UserServices implements IUserSevices {
        String fullName = savedUser.getFirstname() + " " + savedUser.getLastname();
 
 
-       activityLogService.logActivity(
-               "New registration",
-               fullName,
-               fullName + " has registered as " + role
-       );
+       if (user.getRole() != TypeRole.ADMIN) {
+           activityLogService.logActivity(
+                   "New registration",
+                   fullName,
+                   fullName + " has registered as " + role
+           );
+       }
 
 
 
@@ -247,11 +249,13 @@ public class UserServices implements IUserSevices {
             Long extractedUserId = jwtService.extractUserId(jwtToken);
             System.out.println("Extracted User ID from JWT: " + extractedUserId);
             saveRefreshToken(user, refreshToken);
-            activityLogService.logActivity(
-                    "Login",
-                    user.fullName(),
-                    " Successfully logged into the platform "
-            );
+            if (user.getRole() != TypeRole.ADMIN) {
+                activityLogService.logActivity(
+                        "Login",
+                        user.fullName(),
+                        "Successfully logged into the platform"
+                );
+            }
             return AuthenticationResponse.builder().accessToken(jwtToken).refreshToken(refreshToken).build();
         } catch (DisabledException e) {
             throw new BusinessException(BusinessErrorCode.ACCOUNT_DISABLED);

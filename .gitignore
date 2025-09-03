@@ -31,3 +31,4 @@ build/
 
 ### VS Code ###
 .vscode/
+src/main/resources/medicare-notif-firebase-adminsdk-fbsvc-ed55c54977.json

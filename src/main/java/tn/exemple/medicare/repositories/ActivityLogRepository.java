@@ -11,4 +11,6 @@ import java.util.List;
 public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> {
     List<ActivityLog> findTop10ByOrderByTimestampDesc();
     void deleteByTimestampBefore(LocalDateTime dateTime);
+    List<ActivityLog> findByTitleAndTimestampBetween(String title, LocalDateTime start, LocalDateTime end);
+
 }

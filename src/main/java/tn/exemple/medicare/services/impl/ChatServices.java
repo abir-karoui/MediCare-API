@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -41,8 +42,54 @@ public class ChatServices implements IChatServices {
 
         return messagesPage.map(ChatMessageMapper::toDto);
     }
+    @Override
+    public Page<ChatMessageDto> getMessagesWithUser(Long otherUserId, Pageable pageable) {
+        Long currentUserId = authService.getAuthenticatedUserId();
 
-   @Override
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new EntityNotFoundException("Utilisateur actuel non trouvé"));
+
+        User otherUser = userRepository.findById(otherUserId)
+                .orElseThrow(() -> new EntityNotFoundException("Autre utilisateur non trouvé"));
+
+
+
+        Optional<Discussion> discussion = discussionRepository.findByUsers(currentUser, otherUser);
+
+
+        if (discussion.isEmpty()) {
+            // Pas encore de discussion => retourne une page vide
+            return Page.empty(pageable);
+        }
+
+
+        LocalDateTime deletedAt = null;
+        if (discussion.get().getId() ==(currentUserId)) {
+            deletedAt = discussion.get().getDeletedAtByUser1();
+        } else if (discussion.get().getUser2().getId() == (currentUserId)) {
+            deletedAt = discussion.get().getDeletedAtByUser2();
+        }
+
+        Page<ChatMessage> messagesPage;
+        if (deletedAt != null) {
+            messagesPage = chatMessageRepository.findByDiscussionIdAndTimeAfter(
+                    discussion.get().getId(), deletedAt, pageable);
+        } else {
+            messagesPage = chatMessageRepository.findByDiscussionId(
+                    discussion.get().getId(), pageable);
+        }
+
+
+        List<ChatMessage> unreadMessages = messagesPage.getContent().stream()
+                .filter(msg -> msg.getSender().getId() == (otherUserId) && !msg.isRead())
+                .toList();
+
+        unreadMessages.forEach(this::markAsRead);
+
+        return messagesPage.map(ChatMessageMapper::toDto);
+    }
+
+  /* @Override
    public Page<ChatMessageDto> getMessagesWithUser(Long otherUserId, Pageable pageable) {
        Long currentUserId = authService.getAuthenticatedUserId();
 
@@ -83,6 +130,7 @@ public class ChatServices implements IChatServices {
        return messagesPage.map(ChatMessageMapper::toDto);
    }
 
+*/
 
 
 

@@ -74,7 +74,8 @@ public class AdminControllers {
     @GetMapping("/dashboard/stats")
     public ResponseEntity<Map<String, Long>> getDashboardStats() {
         Map<String, Long> stats = new HashMap<>();
-        stats.put("usersCount", (long) (iAdminServices.getAllPatient().size() + iAdminServices.getAllDoctors().size()));
+        stats.put("patientCount", (long) iAdminServices.getAllPatient().size() );
+        stats.put("doctorCount", (long) iAdminServices.getAllDoctors().size() );
         stats.put("prescriptionsCount", (long) iPrescriptionServices.getPrescriptions().size());
         stats.put("diseasesCount", iDiseases.countDiseases());
 

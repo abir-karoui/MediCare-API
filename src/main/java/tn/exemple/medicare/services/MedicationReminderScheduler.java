@@ -36,7 +36,7 @@ public class MedicationReminderScheduler {
 
     private final Logger logger = LoggerFactory.getLogger(MedicationReminderScheduler.class);
     @Transactional
-    @Scheduled(cron = "0 35 15 * * *")
+    @Scheduled(cron = "0 0 0 * * *")
     public void generateTodayMedicationIntakes() {
         LocalDate today = LocalDate.now();
 
@@ -67,8 +67,13 @@ public class MedicationReminderScheduler {
         LocalTime now = LocalTime.now().withSecond(0).withNano(0);
         LocalDate today = LocalDate.now();
 
-        List<MedicationIntake> intakes = medicationIntakeRepository
-                .findByDateAndTimeToTakeAndNotifiedFalse(today, now);
+        List<MedicationIntake> intakes = medicationIntakeRepository.findPendingIntakes(
+                today,
+                now.minusMinutes(1),
+                now.plusMinutes(1)
+        );
+
+
 
         for (MedicationIntake intake : intakes) {
             if (intake.getPrescription().isActive()) {
