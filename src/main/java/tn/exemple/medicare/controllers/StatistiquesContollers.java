@@ -44,8 +44,8 @@ public class StatistiquesContollers {
         return ResponseEntity.ok(dashboard);
     }
     @GetMapping("/login/last-week")
-    public ResponseEntity<Map<LocalDate, Long>> getLoginStatsLastWeek() {
-        Map<LocalDate, Long> stats = activityLogService.getLoginStatsLastWeek();
+    public ResponseEntity<Map<String, Long>> getLoginStatsLastWeek() {
+        Map<String, Long> stats = activityLogService.getLoginStatsLastWeek();
         return ResponseEntity.ok(stats);
     }
 

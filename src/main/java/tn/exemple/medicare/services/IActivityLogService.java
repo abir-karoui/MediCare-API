@@ -12,5 +12,5 @@ public interface IActivityLogService {
     void logActivity(String title, String performedBy, String description);
 
     Page<ActivityLog> getActivities (int pageNo, int pageSize) ;
-    Map<LocalDate, Long>  getLoginStatsLastWeek();
+    Map<String, Long> getLoginStatsLastWeek();
 }

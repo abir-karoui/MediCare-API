@@ -54,31 +54,34 @@ public class ActivityLogService implements IActivityLogService {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<LocalDate, Long> getLoginStatsLastWeek() {
+    public Map<String, Long> getLoginStatsLastWeek() {
         LocalDate today = LocalDate.now();
         LocalDate weekAgo = today.minusDays(6); // dernière semaine
 
         LocalDateTime startDateTime = weekAgo.atStartOfDay();
         LocalDateTime endDateTime = today.atTime(LocalTime.MAX);
 
+        Locale locale = Locale.ENGLISH; // même locale partout
+
         // Récupérer toutes les activités Login de la dernière semaine
         List<ActivityLog> logs = activityLogRepository.findByTitleAndTimestampBetween(
                 "Login", startDateTime, endDateTime
         );
 
-        // Grouper par date et compter
-        Map<LocalDate, Long> stats = logs.stream()
+        // Grouper par nom de jour et compter
+        Map<String, Long> stats = logs.stream()
                 .collect(Collectors.groupingBy(
-                        log -> log.getTimestamp().toLocalDate(),
+                        log -> log.getTimestamp().getDayOfWeek().getDisplayName(TextStyle.FULL, locale),
                         LinkedHashMap::new,
                         Collectors.counting()
                 ));
 
-        // Assurer que tous les jours de la semaine apparaissent (même si 0 login)
-        Map<LocalDate, Long> completeStats = new LinkedHashMap<>();
+        // Construire la map complète avec tous les jours de la semaine
+        Map<String, Long> completeStats = new LinkedHashMap<>();
         for (int i = 0; i <= 6; i++) {
             LocalDate date = weekAgo.plusDays(i);
-            completeStats.put(date, stats.getOrDefault(date, 0L));
+            String dayName = date.getDayOfWeek().getDisplayName(TextStyle.FULL, locale);
+            completeStats.put(dayName, stats.getOrDefault(dayName, 0L));
         }
 
         return completeStats;

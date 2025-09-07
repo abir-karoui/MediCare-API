@@ -129,6 +129,37 @@ public class NotificationServices  implements INotificationServices {
         }
     }
 
+    @Override
+    @Transactional
+    public Page<NotificationResponse> getAccountVerificationNotifications(int pageNo, int pageSize) {
+        Long userId = authService.getAuthenticatedUserId();
+
+        // Vérifier que l'utilisateur existe
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User with ID: " + userId + " not found"));
+
+        // Créer la pagination
+        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, "sentAt"));
+
+        // Récupérer les notifications de type ACCOUNT_VERIFICATION pour cet utilisateur
+        Page<Notification> notificationsPage = notificationRepository
+                .findByUserIdAndType(userId, NotificationType.ACCOUNT_VERIFICATION, pageable);
+
+        // Filtrer celles dont le médecin n'est pas encore vérifié
+        List<Notification> filtered = notificationsPage.stream()
+                .filter(notif -> notif.getDoctor() != null && !notif.getDoctor().isMedicalCardVerified())
+                .toList();
+
+        // Mapper vers DTO et créer une nouvelle Page
+        return new org.springframework.data.domain.PageImpl<>(
+                filtered.stream().map(notificationMapper::mapToDto).toList(),
+                pageable,
+                notificationsPage.getTotalElements()
+        );
+    }
+
+
+
 
 
 

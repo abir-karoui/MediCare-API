@@ -25,7 +25,7 @@ public class GeminiService implements IGeminiService {
     private  final PrescriptionServices prescriptionServices;
     private  final DoctorServices doctorServices;
 
-    @Override
+   /* @Override
     public String checkInteractions(String userPrompt) {
         String url = "https://openrouter.ai/api/v1/chat/completions"; // ✅ bon endpoint
 
@@ -78,6 +78,55 @@ public class GeminiService implements IGeminiService {
             return "Error calling Gemini API: " + e.getMessage();
         }
     }
+*/
+   @Override
+   public String checkInteractions(String userPrompt) {
+       // ✅ Endpoint officiel Google Gemini
+       String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+
+       // ✅ Corps de la requête
+       Map<String, Object> body = new HashMap<>();
+       Map<String, Object> content = new HashMap<>();
+       content.put("parts", List.of(Map.of("text", userPrompt)));
+       body.put("contents", List.of(content));
+
+       // ✅ Headers
+       HttpHeaders headers = new HttpHeaders();
+       headers.setContentType(MediaType.APPLICATION_JSON);
+
+       HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+       try {
+           ResponseEntity<String> response = restTemplate.exchange(
+                   url,
+                   HttpMethod.POST,
+                   request,
+                   String.class
+           );
+
+           if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+               ObjectMapper mapper = new ObjectMapper();
+               Map<String, Object> responseBody = mapper.readValue(response.getBody(), Map.class);
+
+               if (responseBody.containsKey("candidates")) {
+                   List<Map<String, Object>> candidates = (List<Map<String, Object>>) responseBody.get("candidates");
+                   if (!candidates.isEmpty()) {
+                       Map<String, Object> candidate = candidates.get(0);
+                       Map<String, Object> contentResp = (Map<String, Object>) candidate.get("content");
+                       List<Map<String, Object>> parts = (List<Map<String, Object>>) contentResp.get("parts");
+                       if (!parts.isEmpty()) {
+                           return (String) parts.get(0).get("text");
+                       }
+                   }
+               }
+           }
+
+           return "No response from Gemini.";
+       } catch (Exception e) {
+           e.printStackTrace();
+           return "Error calling Gemini API: " + e.getMessage();
+       }
+   }
 
     public String validateNewMedication(Long idPatient , String newMedication) {
         List<Prescription> prescriptions = doctorServices.getAllPrescriptionsForPatient(idPatient);

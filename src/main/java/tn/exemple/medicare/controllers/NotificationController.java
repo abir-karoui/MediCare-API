@@ -32,6 +32,13 @@ public class NotificationController {
         int count = notificationService.getUnreadNotificationCount();
         return ResponseEntity.ok(count);
     }
+    @GetMapping("/notif/AccountVerification")
+    public Page<NotificationResponse> getAccountVerificationNotifications(
+            @RequestParam(defaultValue = "0") int pageNo,
+            @RequestParam(defaultValue = "10") int pageSize
+    ) {
+        return notificationService.getAccountVerificationNotifications(pageNo, pageSize);
+    }
 
 }
 

@@ -19,4 +19,5 @@ public interface INotificationServices {
     void sendMsgNotif(ChatMessage chatMessage);
     int getUnreadNotificationCount();
     void notifyAdminNewDoctor(Doctor doctor);
+    Page<NotificationResponse>  getAccountVerificationNotifications(int pageNo, int pageSize);
 }
